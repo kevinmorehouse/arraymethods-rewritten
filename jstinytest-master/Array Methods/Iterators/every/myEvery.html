@@ -1,0 +1,139 @@
+<script src="../../../simpletest.js"></script>
+<script>
+
+  /*
+  Function signature:
+
+  every(array, callback[, optionalThis])
+
+  Parameters:
+    array
+    callback
+      currentValue
+      index
+      array
+    optionalThis
+
+  Return Value:
+    Returns 'true' if callback returns a truthy value for every array element
+    Otherwise, returns 'false'
+  */
+
+  function every(array, callback, optionalThis) {
+    var length = array.length;
+    var everyCallback = callback;
+
+    if (optionalThis) {
+      everyCallback = callback.bind(optionalThis);
+    }
+
+    for (var i = 0; i < length; i++) {
+      if (i in array && !everyCallback(array[i], i, array)) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  tests({
+    'It should pass in the ith element (currentValue) as the first argument to the callback.': function () {
+      every([1], function (currentValue) {
+        eq(currentValue, 1);
+      });
+    },
+    'It should pass in the ith position as the second argument to the callback.': function () {
+      every([1], function (currentValue, index) {
+        eq(index, 0);
+      });
+    },
+    'It should pass in the array as the third argument to the callback.': function () {
+      var originalArray = [1, 2, 3];
+      every(originalArray, function (currentValue, index, array) {
+        eq(array, originalArray);
+      });
+    },
+    "It should accept an optional 'this' value.": function () {
+      every([1], function () {
+        eq(this.text, 'I should be accessible within the callback');
+      }, { text: 'I should be accessible within the callback' })
+    },
+
+    "If callback returns a truthy value for every array element, it should return 'true'.": function () {
+      var returnedValue = every([0, 0], function (currentValue) {
+        return currentValue === 0;
+      });
+      eq(returnedValue, true);
+    },
+    'If callback returns a truthy value for every array element, callback should run array.length times.': function () {
+      var numberOfTimesCallbackHasRun = 0;
+      every([0, 0], function (currentValue) {
+        numberOfTimesCallbackHasRun++;
+        return currentValue === 0;
+      });
+      eq(numberOfTimesCallbackHasRun, 2);
+    },
+    "If callback returns a falsy value, it should immediately return 'false'.": function () {
+      var numberOfTimesCallbackHasRun = 0;
+      var returnedValue = every([0, 1], function (currentValue) {
+        numberOfTimesCallbackHasRun++;
+        return currentValue === 0;
+      });
+      eq(returnedValue, false);
+      eq(numberOfTimesCallbackHasRun, 2);
+    },
+    "It should return 'true' for any condition put on an empty array.": function () {
+      var returnedValue = every([], function (currentValue) {
+        return currentValue === 0;
+      });
+      eq(returnedValue, true);
+    },
+
+    'It should call callback only for indexes of the array with assigned values.': function () {
+      var numberOfTimesCallbackHasRun = 0;
+      var returnedValue = every([, 1, , 2, ,], function (currentValue) {
+        numberOfTimesCallbackHasRun++;
+        return currentValue > 0;
+      });
+      eq(numberOfTimesCallbackHasRun, 2);
+      eq(returnedValue, true);
+    },
+    'It should not call callback on deleted elements.': function () {
+      var numberOfTimesCallbackHasRun = 0;
+      every([1, 2, 3], function (currentValue, index, array) {
+        numberOfTimesCallbackHasRun++;
+        array.splice(2, 1);
+        return currentValue > 0;
+      });
+      eq(numberOfTimesCallbackHasRun, 2);
+    },
+    "It should not call callback on elements appended to the array after the call to 'every' begins.": function () {
+      var numberOfTimesCallbackHasRun = 0;
+      every([1, 2, 3], function (currentValue, index, array) {
+        numberOfTimesCallbackHasRun++;
+        array.push(0);
+        return currentValue > 0;
+      });
+      eq(numberOfTimesCallbackHasRun, 3);
+    },
+    "If an existing, unvisited element of the array is changed by callback, the value passed to callback will be its value when 'every' visits that index.": function () {
+      var testArray = [1, 2, 3];
+      var returnedValue = every(testArray, function (currentValue, index, array) {
+        array.splice(2, 1, 0);
+        return currentValue > 0;
+      });
+      eq(returnedValue, false);
+      eq(testArray[2], 0);
+    },
+
+    'It should not mutate the array on which it is called.': function () {
+      var testArray = [1, 2, 3];
+      every(testArray, function () { });
+      eq(JSON.stringify(testArray), JSON.stringify([1, 2, 3]));
+    },
+    'If callback is an empty function, it should return false.': function () {
+      var returnedValue = every([1, 2, 3], function () { });
+      eq(returnedValue, false);
+    }
+  });
+</script>

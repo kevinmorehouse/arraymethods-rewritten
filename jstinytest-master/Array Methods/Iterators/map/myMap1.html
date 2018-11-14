@@ -1,0 +1,143 @@
+<script src="../../../simpletest.js"></script>
+<script>
+  // Example 1:
+  // map([1, 2, 3], function() {
+  //    console.log('hi');
+  //})
+
+  // Example 2:
+  // map([1, 2, 3], function(value) {
+  //   console.log(value);
+  //})
+
+  // Example 3:
+  // map([1, 2, 3], function(value, index) {
+  //   console.log(index);
+  //})
+
+  // Example 4:
+  // map([1, 2, 3], function(value, index, array) {
+  //   console.log(array);
+  //})
+
+  // Example 5:
+  // map([1], function() {
+  //   console.log(this.a)
+  //}, {a:1})
+
+  // Example 6:
+  // var mappedArray = map([1], function() {})
+  // Array.isArray(mappedArray) === true;
+
+  // Example 7:
+  // var mappedArray = map(originalArray, function() {});
+  // mappedArray !== originalArray;
+
+  // Example 8:
+  // var mappedArray = map([1], function(value) {
+  //   return value * 2;
+  //})
+  //  mappedArray[0] === (1*2);
+
+  // Example 9:
+  // var mappedArray = map([1], function(value) {
+  //   return value * 2;
+  //})
+  //  mappedArray[0] === 2;
+
+  // Example 10:
+  // var mappedArray = map([1, , 3], function(value) {
+  //   return value * 2;
+  //})
+  //  mappedArray.hasOwnProperty(1) === false;
+
+
+  function map(originalArray, callback, optionalThis) {
+    var mapCallback = callback;
+
+    if (optionalThis) {
+      mapCallback = callback.bind(optionalThis);
+    }
+
+    var mappedArray = [];
+
+    for (var i = 0; i < originalArray.length; i++) {
+      if (originalArray.hasOwnProperty(i) === false) {
+
+        continue;
+
+      } else {
+
+        mappedArray[i] = mapCallback(originalArray[i], i, originalArray);
+      }
+
+    }
+    return mappedArray;
+  }
+
+  tests({
+    'It should run the callback function array.length times.': function() {
+      var numberOfTimesCallbackHasRun = 0;
+      map([1, 2, 3], function() {
+        numberOfTimesCallbackHasRun++;
+      })
+      eq(numberOfTimesCallbackHasRun, 3);
+    },
+    'It should pass in the ith value as the first argument to the callback.': function() {
+      map([1], function(value) {
+        eq(value, 1);
+      })
+    },
+    'It should pass in the ith position as the second argument to the callback.': function() {
+      map([1], function(value, index) {
+        eq(index, 0);
+      })
+    },
+    'It should pass in the original array as the third argument to the callback.': function() {
+      var testArray = [1, 2, 3]
+      map(testArray, function(value, index, originalArray) {
+        eq(testArray, originalArray);
+      })
+    },
+    'It should accept an optional this object.': function() {
+      map([1], function() {
+        eq(this.text, 'I should be accessible within the callback');
+      }, {
+        text: 'I should be accessible within the callback'
+      })
+    },
+    'It should return an array.': function() {
+      var mappedArray = map([1, 2, 3], function() {});
+      eq(Array.isArray(mappedArray), true);
+    },
+    'It should return a new array, not the original array.': function() {
+      var originalArray = [];
+      var mappedArray = map(originalArray, function() {});
+      eq(mappedArray !== originalArray, true);
+    },
+    'It should return a new array with the results of calling the callback on each element in the original array.': function() {
+      var mappedArray = map([1], function(value) {
+        return value * 2;
+      });
+      eq(mappedArray[0], 2);
+    },
+    'It should return a new array with callback outputs mapped to the same position as their corresponding inputs from the original array.': function() {
+      var originalArray = [1];
+      var mappedArray = map(originalArray, function(value) {
+        return value * 2;
+      });
+
+      eq(originalArray.hasOwnProperty(0), true);
+      eq(mappedArray.hasOwnProperty(0), true);
+    },
+    'It should return a new array with the same missing indexes as the original array, if any.': function() {
+      var originalArray = [1, , 3]
+      var mappedArray = map(originalArray, function(value) {
+        return value * 2;
+      });
+
+      eq(originalArray.hasOwnProperty(1), false);
+      eq(mappedArray.hasOwnProperty(1), false);
+    }
+  });
+</script>

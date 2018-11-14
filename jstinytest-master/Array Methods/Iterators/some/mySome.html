@@ -1,0 +1,135 @@
+<script src="../../../simpletest.js"></script>
+<script>
+
+  /*
+  Function signature:
+    some(array, callback[, optionalThis])
+
+  Parameters:
+    array,
+    callback
+      currentValue
+      index
+      array
+    optionalThis
+
+  Return Value:
+  If any array element returns a truthy value, 'true'.
+  Otherwise, 'false'.
+  */
+
+  function some(array, callback, optionalThis) {
+    var length = array.length;
+    var someCallback = callback;
+
+    if (optionalThis) {
+      someCallback = callback.bind(optionalThis);
+    }
+
+    for (var i = 0; i < length; i++) {
+      if (i in array && someCallback(array[i], i, array)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  tests({
+    'It should pass in the ith element (currentValue) as the first argument to the callback.': function() {
+      some([1], function(currentValue) {
+        eq(currentValue, 1);
+      });
+    },
+    'It should pass in the ith position (index) as the second argument to the callback.': function() {
+      some([1], function(currentValue, index) {
+        eq(index, 0);
+      });
+    },
+    'It should pass in the original array (array) as the third argument to the callback.': function() {
+      var originalArray = [1, 2, 3];
+      some(originalArray, function(currentValue, index, array) {
+        eq(array, originalArray);
+      });
+    },
+    'It should accept an optional `this` value.': function() {
+      some([1], function() {
+        eq(this.text, 'I should be accessible within the callback');
+      }, {text: 'I should be accessible within the callback'});
+    },
+
+    'If array is empty, it should return `false`.': function() {
+      var returnedValue = some([], function(currentValue) {
+        return currentValue === 0;
+      });
+      eq(returnedValue, false);
+    },
+    'If no element in array returns a truthy value, it should return `false`.': function() {
+      var returnedValue = some([1, 2, 3], function(currentValue) {
+        return currentValue === 0;
+      });
+      eq(returnedValue, false);
+    },
+    'If no element in array returns a truthy value, callback should run array.length times.': function() {
+      var numberOfTimesCallbackHasRun = 0;
+      some([1, 2, 3], function(currentValue) {
+        numberOfTimesCallbackHasRun++
+        return currentValue === 0;
+      });
+      eq(numberOfTimesCallbackHasRun, 3);
+    },
+    'If any element in array returns a truthy value, it should immediately return `true`.': function() {
+      var numberOfTimesCallbackHasRun = 0;
+      var returnedValue = some([1, 0, 2], function(currentValue) {
+        numberOfTimesCallbackHasRun++;
+        return currentValue === 0;
+      });
+      eq(returnedValue, true);
+      eq(numberOfTimesCallbackHasRun, 2);
+    },
+
+    'It should call callback only for indexes of array with assigned values.': function() {
+      var numberOfTimesCallbackHasRun = 0;
+      var returnedValue = some([, 1, , 2, ,], function(currentValue) {
+        numberOfTimesCallbackHasRun++;
+        return currentValue === 0;
+      });
+      eq(numberOfTimesCallbackHasRun, 2);
+      eq(returnedValue, false);      
+    },
+    'It should not call callback on deleted indexes.': function() {
+      var numberOfTimesCallbackHasRun = 0;
+      var testArray = [1, 2, 3];
+      some(testArray, function(currentValue, index, array) {
+        numberOfTimesCallbackHasRun++;
+        array.splice(2, 1);
+      });
+      eq(numberOfTimesCallbackHasRun, 2);
+      eq(testArray.length, 2);  
+    },
+    'It should not call callback on elements appended to array after call to `some` begins.': function() {
+      var numberOfTimesCallbackHasRun = 0;
+      var testArray = [1];
+      some(testArray, function(currentValue, index, array) {
+        numberOfTimesCallbackHasRun++;
+        array.splice(1, 1, 2);
+      });
+      eq(numberOfTimesCallbackHasRun, 1);
+      eq(testArray.length, 2);
+    },
+    'If  an existing element of the array is changed, its value as passed to callback will be the value at the time that `some` visits that element.': function() {
+      var testArray = [1, 2, 3];
+      var returnResult = some(testArray, function(currentValue, index, array) {
+        array.splice(2, 1, 0);
+        return currentValue === 0;
+      });
+      eq(testArray[2], 0);
+      eq(returnResult, true);
+    },
+
+    'It should not mutate the array on which it is called.': function() {
+      var testArray = [1, 2, 3];
+      some(testArray, function() {});
+      eq(JSON.stringify(testArray), JSON.stringify([1, 2, 3]));
+    }
+  });
+</script>

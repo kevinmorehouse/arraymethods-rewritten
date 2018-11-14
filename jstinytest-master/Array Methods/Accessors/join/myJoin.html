@@ -1,0 +1,83 @@
+<script src="../../../simpletest.js"></script>
+<script>
+
+  /*
+  Function Signature:
+    join(array[,separator])
+
+  Parameters:
+    separator (optional)
+
+
+  Return Value:
+    A string with all array elements joined.
+    If array.length = 0, an empty string is returned.
+  */
+
+  function join(array, separator) {
+    var newString = '';
+    var separatorString = '';
+
+    if (separator !== null && separator !== undefined) {
+      separatorString = String(separator);
+    } else {
+      separatorString = ','
+    }
+
+    for (var i = 0; i < array.length; i++) {
+      if (array[i] !== null && array[i] !== undefined) {
+        newString += String(array[i]);
+      }
+      if (i < array.length - 1) {
+        newString += separatorString;
+      }
+    }
+    return newString;
+  }
+
+  tests({
+    'It should return a string.': function () {
+      var returnedValue = join([]);
+      eq(typeof returnedValue, 'string');
+    },
+    'It should return array elements converted to strings.': function () {
+      var returnedString = join([1]);
+      eq(returnedString, '1');
+    },
+    'If array contains two or more elements, returned string should feature each pair of elements separated by occurrences of \'separator\'.': function () {
+      var returnedString = join([1, 2, 3], '+');
+      eq(returnedString, '1+2+3');
+    },
+    'If array.length is equal to 0, it should return the empty string.': function () {
+      var returnedValue = join([]);
+      eq(returnedValue, '');
+    },
+
+    'If optional separator is not a string, separator should be converted to a string.': function () {
+      var returnedString = join([1, 2, 3], true);
+      eq(returnedString, '1true2true3');
+    },
+    'If \'separator\' is not provided, the returned string should separate elements with a comma.': function () {
+      var returnedString = join([1, 2, 3]);
+      eq(returnedString, '1,2,3');
+    },
+    '\'Null\' or \'undefined\' values in the array should be converted to the empty string in the returned string.': function () {
+      var returnedString = join([null, , undefined]);
+      eq(returnedString, ',,');
+    },
+    'If separator is an empty string, all elements should be joined without any characters between them.': function () {
+      var returnedString = join([1, 2, 3], '');
+      eq(returnedString, '123');
+    },
+    'It should join elements from array-like objects.': function () {
+      var arrayLikeObject = {
+        0: 1,
+        1: 2,
+        length: 2
+      };
+
+      var returnedString = join(arrayLikeObject);
+      eq(returnedString, '1,2');
+    }
+  });
+</script>

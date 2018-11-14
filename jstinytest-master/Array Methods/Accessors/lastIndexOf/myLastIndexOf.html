@@ -1,0 +1,83 @@
+<script src="../../../simpletest.js"></script>
+<script>
+
+  /*
+  Function Signature:
+    lastIndexOf(array, searchElement[, fromIndex])
+
+  Parameters:
+    array
+    searchElement
+    fromIndex (optional)
+
+  Return Value:
+    Returns the last index at which a given element can be found in the array.
+    Otherwise, -1.
+  */
+
+  function lastIndexOf(array, searchElement, optionalFromIndex) {
+
+    if (arguments.length < 3) {
+      optionalFromIndex = array.length - 1;
+    }
+
+    if (optionalFromIndex < 0) {
+      optionalFromIndex = optionalFromIndex + array.length;
+    }
+
+    for (var i = optionalFromIndex; i > -1; i--) {
+      if (i in array && array[i] === searchElement) {
+        return i;
+      }
+    }
+    return -1;
+  }
+
+  tests({
+    'It should use strict equality to compare searchElement (second argument to \'lastIndexOf\') to array elements.': function () {
+      var testArray = [1];
+      var returnedIndex = lastIndexOf(testArray, 1, 0);
+      eq(testArray[returnedIndex] === 1, true);
+    },
+
+    'If optional fromIndex (third argument to \'lastIndexOf\') is not provided, its value should default to array.length - 1.': function () {
+      var testArray = [1, 1];
+      var returnedIndex = lastIndexOf(testArray, 1);
+      eq(returnedIndex, testArray.length - 1);
+    },
+
+    'If fromIndex is greater than or equal to array.length, it should search the whole array.': function () {
+      var returnedIndex1 = lastIndexOf([1, 2, 3, 4, 5], 5, 5);
+      var returnedIndex2 = lastIndexOf([1, 2, 3, 4, 5], 1, 5);
+      eq(returnedIndex1, 4);
+      eq(returnedIndex2, 0);
+    },
+
+    'If fromIndex is a negative number, it should be used as the offset from the end of the array, computing a new fromIndex.': function () {
+      var returnedIndex = lastIndexOf([1, 1, 1, 1], 1, -2);
+      eq(returnedIndex, 2);
+    },
+    'If fromIndex is a negative number, and the calculated offset results in a new fromIndex that is less than 0, it should return -1.': function () {
+      var returnedIndex = lastIndexOf([1, 1, 1, 1], 1, -5);
+      eq(returnedIndex, -1);
+    },
+    'If fromIndex is a negative number, it should still search the array from back to front.': function () {
+      var returnedIndex = lastIndexOf([1, 1, 0, 1, 1], 1, -3);
+      eq(returnedIndex, 1);
+    },
+
+    'It should skip holes.': function () {
+      var returnedIndex = lastIndexOf([, , ,], undefined);
+      eq(returnedIndex, -1);
+    },
+
+    'It should return the last index at which searchElement can be found in the array.': function () {
+      var returnedIndex = lastIndexOf([1, 0, 1], 1, 2);
+      eq(returnedIndex, 2);
+    },
+    'If searchElement cannot be found in the array, it should return -1.': function () {
+      var returnedIndex = lastIndexOf([1, 2, 3], 0);
+      eq(returnedIndex, -1);
+    }
+  });
+</script>

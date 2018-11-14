@@ -1,0 +1,287 @@
+<script src="../../../simpletest.js"></script>
+<script>
+
+  /*
+  Requirements:
+
+  Function Signature:
+    shift(array)
+
+  Parameters:
+    array
+
+  Return Value:
+    The first element of the original array.
+    If array is empty, \'undefined\'.
+  */
+
+  function shift(array) {
+    var shiftedValue;
+    var arrayIndexes = Object.keys(array);
+    var numIndexes = [];
+
+    array = Object.prototype.valueOf.call(array);
+
+    if (typeof array === 'string' || array instanceof String || array instanceof Function) {
+      throw new TypeError;
+    }
+
+    if (typeof array.length !== 'number') {
+      array.length = +array.length;
+    }
+
+    if (Number.isNaN(array.length) || array.length < 0) {
+      array.length = 0;
+    }
+
+    if (Number.isInteger(array.length) === false) {
+      array.length = Math.floor(array.length);
+    }
+
+    if (array.length === 0) {
+      return;
+    } else {
+      shiftedValue = array[0];
+    }
+
+    for (var i = 0; i < arrayIndexes.length; i++) {
+      if (+arrayIndexes[i] >= 0) {
+        numIndexes.push(+arrayIndexes[i]);
+      }
+    }
+
+    for (var j = 1; j <= numIndexes.length; j++) {
+      array[j - 1] = array[j];
+    }
+
+    delete array[numIndexes[numIndexes.length - 1]];
+
+    if (array.length > 0) {
+      array.length--;
+    }
+
+    return shiftedValue;
+  }
+
+  tests({
+    'It should return the original element stored at index 0.': function () {
+      var returnedValue = shift([1, 2, 3]);
+      eq(returnedValue, 1);
+    },
+    'It should shift all existing values at consecutive numerical indexes to an index equal to one less than their current index.': function () {
+      var testArray = [1, 2, 3];
+      var returnedValue = shift(testArray);
+      eq(testArray[0], 2);
+      eq(testArray[1], 3);
+      eq(2 in testArray, false);
+    },
+    'After shifting existing values to lower numerical indexes, it should delete the highest numerical index': function () {
+      var testObject = {
+        0: 'I should be shifted off of the array',
+        1: 'I should move to index 0',
+        length: 5
+      }
+      shift(testObject);
+      eq(testObject[0], 'I should move to index 0');
+      eq(1 in testObject, false);
+    },
+    'It should reduce the value of the length property by 1.': function () {
+      var testArray = [1, 2, 3];
+      shift(testArray);
+      eq(testArray.length, 2);
+    },
+
+    'If original (or coerced) length value is 0, it should return \'undefined\'.': function () {
+      var returnedValue = shift([]);
+      eq(returnedValue, undefined);
+    },
+    'If original (or coerced) length value is 0, no existing values should be removed. ': function () {
+      var testObject = {
+        0: 1,
+        length: 0
+      }
+      shift(testObject);
+      eq(testObject[0], 1);
+    },
+    'If original (or coerced) length value is 0, the final length value will remain 0.': function () {
+      var testObject = {
+        0: 1,
+        length: 0
+      }
+      shift(testObject);
+      eq(testObject.length, 0);
+    },
+    'If original (or coerced) length value is undefined (or nonexistent), it should return \'undefined\'.': function () {
+      var testObject = {
+        0: 1,
+      }
+      var returnedValue = shift(testObject);
+      eq(returnedValue, undefined);
+    },
+
+    'It should accept non-array objects.': function () {
+      var testObject = {
+        0: 1,
+        length: 1
+      }
+      var returnedValue = shift(testObject);
+      eq(returnedValue, 1);
+      eq(testObject.length, 0);
+    },
+
+    'If no index exists at index 0, it should return \'undefined\'.': function () {
+      var testObject = {
+        a: 1,
+        length: 0
+      }
+      var returnedValue = shift(testObject);
+      eq(returnedValue, undefined);
+    },
+    'If no index exists at index 0, it should not remove any existing indexes from original array or object.': function () {
+      var testObject = {
+        a: 1,
+        length: 0
+      }
+      shift(testObject);
+      eq(testObject['a'], 1);
+      eq(testObject.length, 0);
+    },
+    'If no index exists at index 0, it should still shift all existing values at consecutive numerical indexes to their current index, minus 1.': function () {
+      var testObject = {
+        1: 1,
+        length: 2
+      }
+      shift(testObject);
+      eq(testObject[0], 1);
+      eq(testObject.length, 1);
+    },
+    'If no index exists at index 0, but length is greater than 0, it should still reduce length value by 1.': function () {
+      var testObject = {
+        a: 1,
+        length: 1
+      }
+      shift(testObject);
+      eq(testObject['a'], 1);
+      eq(testObject.length, 0);
+    },
+    'If index 0 contains an object, it should return an object reference (and not the object itself).': function () {
+      var objectElement = { changed: false };
+      var returnedValue = shift([objectElement]);
+      objectElement.changed = true;
+      eq(returnedValue.changed, true);
+    },
+    'If index 0 contains a primitive value, it should return that value unaltered.': function () {
+      var returnedValue = shift(["I'm unaltered"]);
+      eq(returnedValue, "I'm unaltered");
+    },
+
+    'It should not ignore holes.': function () {
+      var holyArray = [, , ,];
+      var returnedValue = shift(holyArray);
+      eq(returnedValue, undefined);
+      eq(holyArray.length, 2);
+    },
+
+    'If the length value is not of numeric type, it will be coerced to numeric type via unary +.': function () {
+      var testObject = {
+        0: 1,
+        length: true
+      }
+      var returnedValue = shift(testObject);
+      eq(typeof testObject.length, 'number');
+      eq(returnedValue, 1)
+    },
+    'If the length value is NaN, or otherwise cannot be coerced to a number via unary +, the length property should be set to 0.': function () {
+      var testObject = {
+        0: 1,
+        length: 'I cannot be coerced'
+      }
+      shift(testObject);
+      eq(testObject.length, 0);
+    },
+    'If the length value is undefined (or nonexistent), the length property should be created and set to 0.': function () {
+      var testObject = {
+        0: 1
+      }
+      shift(testObject);
+      eq(testObject.length, 0);
+    },
+    'If the length value is (or is coerced to) a number less than 0, the length property should be set to 0.': function () {
+      var testObject = {
+        0: 1,
+        length: -1,
+      }
+      shift(testObject);
+      eq(testObject.length, 0);
+    },
+    'If the length value is (or is coerced to) a number greater than 0, but not an integer, the length value should be rounded down to the nearest integer before shifting any elements.': function () {
+      var testObject = {
+        0: 1,
+        length: 1.99,
+      }
+      var returnedValue = shift(testObject);
+      eq(testObject.length, 0);
+      eq(returnedValue, 1);
+    },
+
+    'If called on a number primitive, it should return \'undefined\'.': function () {
+      var returnedValue = shift(1);
+      eq(returnedValue, undefined);
+    },
+    'If called on a Number object, it should return \'undefined\'.': function () {
+      var returnedValue = shift(new Number);
+      eq(returnedValue, undefined);
+    },
+    'If called on a boolean primitive, it should return \'undefined\'.': function () {
+      var returnedValue = shift(true);
+      eq(returnedValue, undefined);
+    },
+    'If called on a Boolean object, it should return \'undefined\'.': function () {
+      var returnedValue = shift(new Boolean);
+      eq(returnedValue, undefined);
+    },
+
+    'If called on a string primitive, it should throw a TypeError.': function () {
+      try {
+        shift('string');
+      } catch (e) {
+        var isTypeError = e instanceof TypeError;
+      }
+      eq(isTypeError, true);
+    },
+    'If called on a String object, it should throw a TypeError.': function () {
+      try {
+        shift(new String);
+      } catch (e) {
+        var isTypeError = e instanceof TypeError;
+      }
+      eq(isTypeError, true);
+    },
+    'If called on a function, it should throw a TypeError.': function () {
+      function foo() { }
+
+      try {
+        shift(foo);
+      } catch (e) {
+        var isTypeError = e instanceof TypeError;
+      }
+      eq(isTypeError, true);
+    },
+    'If called on \'null\', it should throw a TypeError.': function () {
+      try {
+        shift(null);
+      } catch (e) {
+        var isTypeError = e instanceof TypeError;
+      }
+      eq(isTypeError, true);
+    },
+    'If called on \'undefined\', it should throw a TypeError.': function () {
+      try {
+        shift(undefined);
+      } catch (e) {
+        var isTypeError = e instanceof TypeError;
+      }
+      eq(isTypeError, true);
+    }
+  });
+</script>

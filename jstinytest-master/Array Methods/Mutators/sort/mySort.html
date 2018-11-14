@@ -1,0 +1,316 @@
+<script src="../../../simpletest.js"></script>
+<script>
+  /*
+
+  Function Signature:
+    sort(array[, compareFunction])
+
+  Parameters:
+    array
+    compareFunction (optional)
+
+  Return Value:
+    The sorted array
+
+  */
+
+  function sort(array, compareFunction) {
+    var arrayKeys = Object.keys(array);
+    var lowIndexExists;
+    var highIndexExists;
+    var temp;
+    var loopAgain;
+
+    // Convert first argument to object, and check for String objects.
+    array = Object.prototype.valueOf.call(array);
+
+    if (array instanceof String) {
+      throw new TypeError();
+    }
+
+    // If no compareFunction provided, use default version below:
+    if (arguments.length < 2) {
+      compareFunction = function(x, y) {
+        if (x < y) {
+          return -1;
+        }
+
+        if (x > y) {
+          return 1;
+        }
+
+        return 0;
+      };
+
+      // Convert all non-string, non-undefined elements to String objects.
+      for (var i = 0; i < array.length; i++) {
+        if (array[i] !== undefined && typeof array[i] !== "string") {
+          array[i] = new String(array[i]);
+        }
+      }
+    }
+
+    // Sort missing and undefined indexes to the end of the array before calling compareFunction.
+    do {
+      loopAgain = false;
+
+      for (var j = 0; j < array.length - 1; j++) {
+        lowIndexExists = j in array;
+        highIndexExists = j + 1 in array;
+
+        if (
+          (!lowIndexExists && highIndexExists) ||
+          (array[j] === undefined && array[j + 1] !== undefined)
+        ) {
+          loopAgain = true;
+
+          temp = array[j];
+          array[j] = array[j + 1];
+          array[j + 1] = temp;
+
+          if (!lowIndexExists) {
+            delete array[j + 1];
+          }
+        }
+      }
+    } while (loopAgain);
+
+    // Loop until all elements at valid indexes are sorted in ascending order.
+    do {
+      loopAgain = false;
+
+      for (var k = 0; k < array.length - 1; k++) {
+        returnValue = compareFunction(array[k], array[k + 1]);
+
+        if (returnValue > 0) {
+          loopAgain = true;
+
+          temp = array[k];
+          array[k] = array[k + 1];
+          array[k + 1] = temp;
+        }
+      }
+    } while (loopAgain);
+
+    // Unwrap any String objects, returning them back into their original data types.
+    if (arguments.length < 2) {
+      for (var l = 0; l < array.length; l++) {
+        if (
+          l in array &&
+          array[l] !== undefined &&
+          array[l] instanceof Object
+        ) {
+          array[l] = parseFloat(array[l].valueOf());
+        }
+      }
+    }
+
+    return array;
+  }
+
+  tests({
+    "It should return an object.": function() {
+      var returnedValue = sort([]);
+      eq(returnedValue instanceof Object, true);
+    },
+    "It should return the original (potentially sorted) object, not a copy.": function() {
+      var testArray = [1, 2, 3];
+      var returnedValue = sort(testArray);
+      eq(returnedValue, testArray);
+    },
+
+    "If compareFunction is omitted, it should sort the array according to each character's Unicode code point value, according to the string conversion of each element.": function() {
+      var testArray = ["March", "Jan", "Feb", "Dec"];
+      sort(testArray);
+      eq(testArray[0], "Dec");
+      eq(testArray[1], "Feb");
+      eq(testArray[2], "Jan");
+      eq(testArray[3], "March");
+    },
+
+    "It should sort all non-'undefined' array elements according to the return value of the compare function.": function() {
+      function compareNumbers(a, b) {
+        return a - b;
+      }
+      var testArray = [3, 1, 0, 2];
+      sort(testArray, compareNumbers);
+      eq(testArray[0], 0);
+      eq(testArray[1], 1);
+      eq(testArray[2], 2);
+      eq(testArray[3], 3);
+    },
+    "It should sort all 'undefined' elements to the end of the array (preceding any holes), with no call to compareFunction.": function() {
+      function compareNumbers(a, b) {
+        numberOfTimesCallbackHasRun++;
+        return a - b;
+      }
+      var testArray = [undefined, 2, undefined, 1];
+      var numberOfTimesCallbackHasRun = 0;
+
+      sort(testArray, compareNumbers);
+      var compareFunctionCallsWithUndefined = numberOfTimesCallbackHasRun;
+
+      eq(testArray[2], undefined);
+      eq(testArray[3], undefined);
+
+      testArray = [3, 2, 0, 1];
+      numberOfTimesCallbackHasRun = 0;
+
+      sort(testArray, compareNumbers);
+      var compareFunctionCallsWithNoUndefined = numberOfTimesCallbackHasRun;
+
+      eq(
+        compareFunctionCallsWithNoUndefined > compareFunctionCallsWithUndefined,
+        true
+      );
+    },
+    "It should sort all holes to the end of the array, with no call to compareFunction.": function() {
+      function compareNumbers(a, b) {
+        numberOfTimesCallbackHasRun++;
+        return a - b;
+      }
+      var testArray = [, 2, , 1];
+      var numberOfTimesCallbackHasRun = 0;
+
+      sort(testArray, compareNumbers);
+      var compareFunctionCallsWithUndefined = numberOfTimesCallbackHasRun;
+
+      eq(2 in testArray, false);
+      eq(3 in testArray, false);
+
+      testArray = [3, 2, 0, 1];
+      numberOfTimesCallbackHasRun = 0;
+
+      sort(testArray, compareNumbers);
+      var compareFunctionCallsWithNoUndefined = numberOfTimesCallbackHasRun;
+
+      eq(
+        compareFunctionCallsWithNoUndefined > compareFunctionCallsWithUndefined,
+        true
+      );
+    },
+    "If holes and undefined values both exist within the array, the holes should be sorted to the end of the array": function() {
+      var testArray = [, undefined, , undefined];
+      sort(testArray);
+
+      eq(testArray[0], undefined);
+      eq(testArray[1], undefined);
+      eq(2 in testArray, false);
+      eq(3 in testArray, false);
+    },
+
+    "If compareFunction is supplied, if a comparison between two elements returns less than zero, the first element should be sorted to an index lower than the second element.": function() {
+      function compareNumbers(a, b) {
+        numberOfTimesCallbackHasRun++;
+        return a - b;
+      }
+      var returnedArray = sort([1, 2, 3, 4]);
+      eq(returnedArray[0], 1);
+      eq(returnedArray[1], 2);
+    },
+    "If compareFunction is supplied, if a comparison between two elements returns zero, the positions of both elements should be unchanged with respect to one another, but sorted with respect to all other elements in array.": function() {
+      function compareNumbers(a, b) {
+        numberOfTimesCallbackHasRun++;
+        return a - b;
+      }
+      var returnedArray = sort([4, 2, 2, 1]);
+      eq(returnedArray[0], 1);
+      eq(returnedArray[1], 2);
+      eq(returnedArray[2], 2);
+      eq(returnedArray[3], 4);
+    },
+    "If compareFunction is supplied, if a comparison between two elements returns greater than zero, the first element should be sorted to an index higher than the second element.": function() {
+      function compareNumbers(a, b) {
+        numberOfTimesCallbackHasRun++;
+        return a - b;
+      }
+      var returnedArray = sort([2, 1, 3, 4]);
+      eq(returnedArray[0], 1);
+      eq(returnedArray[1], 2);
+    },
+    "If compareFunction is supplied, it should always return the same value when given a specific pair of elements.": function() {
+      function compareNumbers(a, b) {
+        numberOfTimesCallbackHasRun++;
+        return a - b;
+      }
+      var returnedArray = sort([2, 1]);
+      eq(returnedArray[0], 1);
+      eq(returnedArray[1], 2);
+      returnedArray = sort([2, 1]);
+      eq(returnedArray[0], 1);
+      eq(returnedArray[1], 2);
+    },
+
+    "It should sort non-array objects.": function() {
+      var testObject = {
+        0: "March",
+        1: "Jan",
+        2: "Feb",
+        3: "Dec",
+        length: 4
+      };
+      sort(testObject);
+      eq(testObject[0], "Dec");
+      eq(testObject[1], "Feb");
+      eq(testObject[2], "Jan");
+      eq(testObject[3], "March");
+    },
+
+    "If the object 'sort' is called on does not have a numerical length value greater than 0, it should not sort any elements.": function() {
+      var testObject = {
+        0: "March",
+        1: "Jan",
+        2: "Feb",
+        3: "Dec",
+        length: "I'm an invalid length."
+      };
+      sort(testObject);
+      eq(testObject[0], "March");
+      eq(testObject[1], "Jan");
+      eq(testObject[2], "Feb");
+      eq(testObject[3], "Dec");
+    },
+    "It should not modify the length of the object it is called on.": function() {
+      var testObject = {
+        0: "March",
+        1: "Jan",
+        2: "Feb",
+        3: "Dec",
+        length: "I'm an invalid length."
+      };
+      sort(testObject);
+      eq(testObject.length, "I'm an invalid length.");
+    },
+
+    "If called on a primitive data type other than null or undefined, it should convert that value to an object.": function() {
+      var returnedValue = sort(false);
+      eq(returnedValue instanceof Object, true);
+      eq(returnedValue instanceof Boolean, true);
+      eq(returnedValue.valueOf(), false);
+    },
+    "If called on a string primitive, it should throw a TypeError.": function() {
+      try {
+        sort("string");
+      } catch (e) {
+        var isTypeError = e instanceof TypeError;
+      }
+      eq(isTypeError, true);
+    },
+    "If called on 'null', it should throw a TypeError.": function() {
+      try {
+        sort(null);
+      } catch (e) {
+        var isTypeError = e instanceof TypeError;
+      }
+      eq(isTypeError, true);
+    },
+    "If called on 'undefined', it should throw a TypeError.": function() {
+      try {
+        sort(undefined);
+      } catch (e) {
+        var isTypeError = e instanceof TypeError;
+      }
+      eq(isTypeError, true);
+    }
+  });
+</script>

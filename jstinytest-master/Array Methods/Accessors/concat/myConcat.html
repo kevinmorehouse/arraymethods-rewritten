@@ -1,0 +1,101 @@
+<script src="../../../simpletest.js"></script>
+<script>
+
+  /*
+  Function signature:
+    concat(value1[, value2[, ...[, valueN]]])
+
+  Parameters:
+    valueN (Arrays and/or values to concatenate with originalArray to form a new array.)
+
+  Return Value:
+    A new array instance.
+
+  Prototype Implementation:
+
+  function concat() {
+    var newArray = [];
+    for (var i = 0; i < arguments.length; i++) {
+      if (Array.isArray(arguments[i])) {
+        for (var j = 0; j < arguments[i].length; j++) {
+          var ArrayArgument = arguments[i];
+          newArray.push(ArrayArgument[j]);
+        }
+      } else {
+        newArray.push(arguments[i]);  
+      }
+    }
+    return newArray;
+  }
+  */
+
+  function concat() {
+    var newArray = [];
+
+    for (var i = 0; i < arguments.length; i++) {
+      var currentArgument = arguments[i];
+
+      if (Array.isArray(currentArgument)) {
+
+        for (var j = 0; j < currentArgument.length; j++) {
+          newArray.push(currentArgument[j]);
+        }
+
+      } else {
+
+        newArray.push(currentArgument);
+      }
+    }
+    return newArray;
+  }
+
+  tests({
+    'It should return an array.': function () {
+      var returnedValue = concat();
+      eq(Array.isArray(returnedValue), true);
+    },
+    'It should return a new array, not the array(s) provided as argument(s).': function () {
+      var originalArray = [1, 2, 3];
+      var returnedArray = concat(originalArray);
+      eq(returnedArray !== originalArray, true);
+    },
+    "It should return a new array consisting of, in order of provided arguments, each argument's elements (for array arguments) or each argument itself (for non-array arguments).": function () {
+      var arr1 = [1, 2];
+      var arr2 = [3, 4];
+      var returnedArray = concat(arr1, arr2);
+      eq(arr1[0], returnedArray[0]);
+      eq(arr1[1], returnedArray[1]);
+      eq(arr2[0], returnedArray[2]);
+      eq(arr2[1], returnedArray[3]);
+    },
+
+    'It should copy any object references (and not the actual objects) from the array(s) provided as argument(s) into the new array.': function () {
+      var obj1 = { a: true };
+      var returnedArray = concat(obj1);
+      eq(returnedArray[0].a, true);
+      obj1.a = false;
+      eq(returnedArray[0].a, false);
+    },
+    'It should copy any primitive value(s) provided as argument(s) into the new array.': function () {
+      var returnedArray = concat(0, 'string', true);
+      eq(returnedArray[0], 0);
+      eq(returnedArray[1], 'string');
+      eq(returnedArray[2], true);
+    },
+
+    'It should not alter \'this\'.': function () {
+      var returnedArray = concat(this);
+      eq(returnedArray[0], this);
+    },
+    'It should not mutate the array(s) provided as argument(s).': function () {
+      var arr1 = [1, 2, 3];
+      concat(arr1);
+      eq(JSON.stringify(arr1), JSON.stringify([1, 2, 3]));
+    },
+    'It should not recurse into nested array argument(s).': function () {
+      var returnedArray = concat([[0]]);
+      eq(Number.isInteger(returnedArray[0]), false);
+      eq(Array.isArray(returnedArray[0]), true);
+    }
+  });
+</script>

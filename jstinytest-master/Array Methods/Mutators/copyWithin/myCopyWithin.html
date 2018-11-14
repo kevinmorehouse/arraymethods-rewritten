@@ -1,0 +1,294 @@
+<script src="../../../simpletest.js"></script>
+<script>
+
+  /*
+  Requirements:
+
+  Function Signature:
+    copyWithin(array, target, start, end)
+
+  Parameters:
+    array
+    target
+    start
+    end
+
+  Return Value:
+    The modified array.
+
+  */
+
+  function copyWithin(array, target, start, end) {
+    var copiedSequence = [];
+
+    array = Object.prototype.valueOf.call(array);
+
+    if (array instanceof String) {
+      throw new TypeError();
+    }
+
+    if (target === undefined || target < -array.length) {
+      target = 0;
+    } else if (target < 0) {
+      target += array.length;
+    }
+
+    if (start < -array.length || start === undefined) {
+      start = 0;
+    } else if (start < 0) {
+      start += array.length;
+    }
+
+    if (end > array.length || end === undefined) {
+      end = array.length
+    } else if (end < 0) {
+      end += array.length;
+    }
+
+    for (var i = start; i < end; i++) {
+      if (i in array) {
+        copiedSequence.push(array[i]);
+      } else {
+        copiedSequence.length++;
+      }
+    }
+
+    if (copiedSequence.length > (array.length - target)) {
+      copiedSequence.length = (array.length - target);
+    }
+
+    for (var j = 0; j < copiedSequence.length; j++) {
+      if (j in copiedSequence) {
+        array[target + j] = copiedSequence[j];
+      } else if (j in copiedSequence === false) {
+        delete array[target + j];
+      }
+    }
+
+    return array;
+  }
+
+  tests({
+    'It should return an object.': function () {
+      returnedValue = copyWithin([1, 2, 3]);
+      eq(returnedValue instanceof Object, true);
+    },
+    'It should return the original (potentially modified) object, not a copy.': function () {
+      var testArray = [1, 2, 3];
+      returnedValue = copyWithin(testArray);
+      eq(returnedValue, testArray);
+    },
+
+    'If \'target\' is undefined, it should set the value of `target` to 0, and therefore not copy any elements.': function () {
+      returnedValue = copyWithin([1, 2, 3, 4, 5], undefined, 2, 4);
+      eq(JSON.stringify(returnedValue), JSON.stringify([3, 4, 3, 4, 5]));
+    },
+    'If \'target\' is provided, copied sequence will replace elements starting from \'target\' index.': function () {
+      var testArray = [1, 2, 3];
+      copyWithin(testArray, 1);
+      eq(testArray[0], 1);
+      eq(testArray[1], 1);
+      eq(testArray[2], 2);
+    },
+    'If \'target\' is greater than or equal to array.length, it should not copy any elements.': function () {
+      var testArray = [1, 2, 3];
+      copyWithin(testArray, 3);
+      eq(testArray[0], 1);
+      eq(testArray[1], 2);
+      eq(testArray[2], 3);
+    },
+    'If \'target\' is at a higher index than \'start\', the copied sequence will be trimmed to fit array.length.': function () {
+      var testArray = [1, 2, 3];
+      copyWithin(testArray, 2, 0);
+      eq(testArray[2], 1);
+      eq(testArray.length, 3);
+    },
+    'If \'target\' is a negative number, it should compute \'target\' to be equal to length + \'target\'.': function () {
+      var testArray = [1, 2, 3];
+      copyWithin(testArray, -2);
+      eq(testArray[testArray.length + -2], 1)
+    },
+    'If \'target\' is a negative number, and computed \'target\' index is less than zero, the value of \'target\' should default to 0.': function () {
+      var testArray = [1, 2, 3, 4, 5];
+      copyWithin(testArray, -6, 1);
+      eq(testArray[0], 2);
+      eq(testArray[1], 3);
+      eq(testArray[2], 4);
+      eq(testArray[3], 5);
+      eq(testArray[4], 5);
+    },
+
+    'If \'start\' is undefined, the value of \'start\' should default to 0.': function () {
+      var testArray = [1, 2, 3];
+      copyWithin(testArray, 1, undefined);
+      eq(testArray[0], 1);
+      eq(testArray[1], 1);
+      eq(testArray[2], 2);
+    },
+    'If \'start\' is provided, copied sequence should begin with the value at \'start\' index.': function () {
+      var testArray = [1, 2, 3];
+      copyWithin(testArray, 1, 2);
+      eq(testArray[1], 3);
+    },
+    'If \'start\' is a negative number, it should compute \'start\' to be equal to length + \'start\'.': function () {
+      var testArray = [1, 2, 3];
+      copyWithin(testArray, 1, -1);
+      eq(testArray[0], 1);
+      eq(testArray[1], 3);
+      eq(testArray[2], 3);
+    },
+    'If \'start\' is a negative number, and computed \'start\' index is less than zero, the value of \'start\' should default to 0.': function () {
+      var testArray = [1, 2, 3];
+      copyWithin(testArray, 1, -4);
+      eq(testArray[0], 1);
+      eq(testArray[1], 1);
+      eq(testArray[2], 2);
+    },
+    'If provided (or computed) \'start\' index is greater than the provided (or computed) \'end\' index, it should not copy any elements.': function () {
+      var testArray = [1, 2, 3];
+      copyWithin(testArray, 1, 2, 0);
+      eq(testArray[0], 1);
+      eq(testArray[1], 2);
+      eq(testArray[2], 3);
+    },
+
+    'If \'end\' is undefined, the value of \'end\' should default to array.length.': function () {
+      var testArray = [1, 2, 3];
+      copyWithin(testArray, 1, 2);
+      eq(testArray[0], 1);
+      eq(testArray[1], 3);
+      eq(testArray[2], 3);
+    },
+    'If \'end\' is provided, sequence should be copied up to, but not including, \'end\' index.': function () {
+      var testArray = [1, 2, 3];
+      copyWithin(testArray, 0, 1, 2);
+      eq(testArray[0], 2);
+      eq(testArray[1], 2);
+      eq(testArray[2], 3);
+    },
+    'If \'end\' is a negative number, it should compute \'end\' to be equal to length + \'end\'.': function () {
+      var testArray = [1, 2, 3];
+      copyWithin(testArray, 0, 1, -1);
+      eq(testArray[0], 2);
+      eq(testArray[1], 2);
+      eq(testArray[2], 3);
+    },
+    'If provided (or computed) \'end\' index is less than the provided (or computed) \'start\' index, it should not copy any elements.': function () {
+      var testArray = [1, 2, 3];
+      copyWithin(testArray, 0, 1, -4);
+      eq(testArray[0], 1);
+      eq(testArray[1], 2);
+      eq(testArray[2], 3);
+    },
+    'If provided \'end\' index is greater than array.length, the value of \'end\' should default to array.length.': function () {
+      var testArray = [1, 2, 3];
+      copyWithin(testArray, 0, 1, 5);
+      eq(testArray[0], 2);
+      eq(testArray[1], 3);
+      eq(testArray[2], 3);
+    },
+
+    'It should copy all consecutive numerical indexes between original (or computed) \'start\' and \'end\' index.': function () {
+      var testArray = [1, 2, 3, 4, 5];
+      copyWithin(testArray, 2, 0, 2);
+      eq(testArray[2], 1);
+      eq(testArray[3], 2);
+    },
+
+    'If an object is present between \'start\' and \'end\' indexes, the copied sequence should include a reference to that object, not the object itself.': function () {
+      var objectElement = { changed: false }
+      var testArray = [1, objectElement, 3];
+      copyWithin(testArray, 0, 1, 2);
+      eq(testArray[0], objectElement);
+      eq(testArray[0].changed, false);
+      objectElement.changed = true;
+      eq(testArray[0].changed, true);
+    },
+    'If a primitive value is present between \'start\' and \'end\' indexes, the copied sequence should include that primitive value unchanged.': function () {
+      var testArray = [1, true, 3];
+      copyWithin(testArray, 0, 1, 2);
+      eq(testArray[0], true);
+    },
+
+    'If holes are present between \'start\' and \'end\' indexes, it should include those holes in the copied sequence.': function () {
+      var testArray = [1, , 3];
+      copyWithin(testArray, 0, 1, 2);
+      eq(0 in testArray, false);
+    },
+    'If holes are present at an index ranging from target index to the end of the copied sequence, it should overwrite those holes with copied elements.': function () {
+      var testArray = [1, , 3];
+      copyWithin(testArray, 1, 0, 1);
+      eq(testArray[0], 1);
+      eq(testArray[1], 1);
+      eq(testArray[2], 3);
+    },
+
+    'It should accept non-array objects.': function () {
+      var testObject = {
+        0: 1,
+        1: 2,
+        2: 3,
+        length: 3
+      }
+      copyWithin(testObject, 1);
+      eq(testObject[0], 1);
+      eq(testObject[1], 1);
+      eq(testObject[2], 2);
+    },
+    'It should not modify the length of the object it is called on.': function () {
+      var testObject = {
+        0: 1,
+        1: 2,
+        2: 3,
+        length: "I shouldn't change."
+      }
+      copyWithin(testObject, 1);
+      eq(testObject.length, "I shouldn't change.");
+
+    },
+    'If the object \'copyWithin\' is called on does not have a numerical length value greater than 0, it should not copy any elements.': function () {
+      var testObject = {
+        0: 1,
+        1: 2,
+        2: 3,
+        length: "I shouldn't change."
+      }
+      copyWithin(testObject, 1);
+      eq(testObject[0], 1);
+      eq(testObject[1], 2);
+      eq(testObject[2], 3);
+    },
+
+    'If called on a primitive data type other than null or undefined, it should convert that value to an object.': function () {
+      var returnedValue = copyWithin(1);
+      eq(returnedValue instanceof Object, true);
+      eq(returnedValue instanceof Number, true);
+      eq(returnedValue.valueOf(), 1);
+    },
+
+    'If called on a string primitive, it should throw a TypeError.': function () {
+      try {
+        copyWithin('string');
+      } catch (e) {
+        var isTypeError = e instanceof TypeError;
+      }
+      eq(isTypeError, true);
+    },
+    'If called on \'null\', it should throw a TypeError.': function () {
+      try {
+        copyWithin(null);
+      } catch (e) {
+        var isTypeError = e instanceof TypeError;
+      }
+      eq(isTypeError, true);
+    },
+    'If called on \'undefined\', it should throw a TypeError.': function () {
+      try {
+        copyWithin(undefined);
+      } catch (e) {
+        var isTypeError = e instanceof TypeError;
+      }
+      eq(isTypeError, true);
+    }
+  });
+</script>

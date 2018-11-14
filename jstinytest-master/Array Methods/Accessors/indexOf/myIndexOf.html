@@ -1,0 +1,83 @@
+<script src="../../../simpletest.js"></script>
+<script>
+
+  /*
+  Function Signature:
+    indexOf(array, searchElement[, fromIndex])
+
+  Parameters:
+    array,
+    searchElement,
+    fromIndex
+
+  Return Value:
+  The first index at which a given element can be found in the array.
+  Otherwise, -1.
+  */
+
+  function indexOf(array, searchElement, optionalFromIndex) {
+
+    if (arguments.length < 3) {
+      optionalFromIndex = 0;
+    }
+
+    if (optionalFromIndex < 0) {
+      optionalFromIndex = optionalFromIndex + array.length;
+    }
+
+    for (var i = optionalFromIndex; i < array.length; i++) {
+      if (i in array && array[i] === searchElement) {
+        return i;
+      }
+    }
+    return -1;
+  }
+
+  tests({
+    'It should use strict equality to compare searchElement (second argument to \'indexOf\') to array elements.': function() {
+      var testArray = [1];
+      var returnedIndex = indexOf(testArray, 1, 0);
+      eq(testArray[returnedIndex] === 1, true);
+    },
+
+    'If optional fromIndex (third argument to \'indexOf\') is not provided, its value should default to 0.': function() {
+      var returnedIndex = indexOf([1], 1);
+      eq(returnedIndex, 0);
+    },
+
+    'If fromIndex is greater than or equal to array.length, it should return -1 without searching array.': function() {
+      var returnedIndex = indexOf([1], 1, 1);
+      eq(returnedIndex, -1);
+    },
+
+    'If fromIndex is a negative number, it should be used as the offset from the end of the array, computing a new fromIndex.': function() {
+      var returnedIndex = indexOf([1, 1, 1, 1], 1, -2);
+      eq(returnedIndex, 2);
+    },
+    'If fromIndex is a negative number, and the calculated offset results in a new fromIndex that is less than zero, it should search the whole array': function() {
+      var returnedIndex1 = indexOf([1, 2, 3, 4, 5], 5, -6);
+      var returnedIndex2 = indexOf([1, 2, 3, 4, 5], 1, -6);
+      eq(returnedIndex1, 4);
+      eq(returnedIndex2, 0);
+    },
+    'If fromIndex is a negative number, it should still search the array from front to back.': function() {
+      var returnedIndex = indexOf([1, 1, 0, 1, 1], 1, -3);
+      eq(returnedIndex, 3);
+    },
+
+    'It should skip holes.': function() {
+      var returnedIndex = indexOf([, , ,], undefined);
+      eq(returnedIndex, -1);
+    },
+
+    'It should return the first index at which searchElement can be found in the array.': function() {
+      var testArray = [0, 0, 1];
+      var returnedIndex = indexOf(testArray, 1, 0);
+      eq(returnedIndex, 2);
+    },
+    'If searchElement cannot be found in the array, it should return -1.': function() {
+      var returnedIndex = indexOf([1, 2, 3], 0);
+      eq(returnedIndex, -1);
+    }
+  });
+</script>

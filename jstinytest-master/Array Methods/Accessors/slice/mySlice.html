@@ -1,0 +1,156 @@
+<script src="../../../simpletest.js"></script>
+<script>
+
+  /*
+
+  Function Signature:
+    slice(array, [begin[, end]])
+
+  Parameters:
+    array
+    begin (optional)
+    end (optional)
+
+  Return Value:
+    A new array containing the extracted elements.
+  */
+
+  function slice(array, begin, end) {
+    var newArray = [];
+
+    if (begin === undefined || Number.isNaN(begin)) {
+      begin = 0;
+    } else if (begin < 0) {
+      begin += array.length;
+    }
+
+    if (end === undefined || end > array.length) {
+      end = array.length;
+    } else if (end < 0) {
+      end += array.length;
+    }
+
+    if ((end - begin) > 0) {
+      newArray.length = (end - begin);
+
+      for (var i = begin; i < end; i++) {
+        if (i in array) {
+          newArray.splice((i - begin), 1, array[i]);
+        }
+      }
+    }
+    return newArray;
+  }
+
+  tests({
+    'It should return an array.': function() {
+      var returnedValue = slice([]);
+      eq(Array.isArray(returnedValue), true);
+    },
+    'It should return a new array, not the original array.': function() {
+      var originalArray = [];
+      var returnedArray = slice(originalArray);
+      eq(returnedArray !== originalArray, true);
+    },
+    'It should return a new array containing copies of all values in original array, from optional \'begin\' index up to (but not including) optional \'end\' index.': function() {
+      var originalArray = [1, 2, 3]
+      var returnedArray = slice(originalArray, 0, 2);
+      eq(returnedArray[0], originalArray[0]);
+      eq(returnedArray[1], originalArray[1]);
+      eq(2 in returnedArray, false);
+    },
+
+    'If \'begin\' is a valid index in the original array, it should extract the value at \'begin\' index.': function() {
+      var originalArray = [1];
+      var returnedArray = slice(originalArray, 0);
+      eq(returnedArray[0], 1);
+    },
+    'If \'begin\' is undefined, \'begin\' should be equal to 0.': function() {
+      var returnedArray = slice([1], undefined, 1);
+      eq(returnedArray[0], 1);
+      eq(returnedArray.length, 1);
+    },
+    'If \'begin\' is NaN, \'begin\' should be set to 0.': function() {
+      var returnedArray = slice([1], NaN, 1);
+      eq(returnedArray[0], 1);
+      eq(returnedArray.length, 1);
+    },
+
+    'If \'begin\' is a positive number greater than computed (non-negative) value of \'end\' it should return an empty array.': function() {
+      var returnedArray = slice([1, 2, 3], 2, 1);
+      eq(returnedArray.length, 0);
+    },
+    'If \'begin\' is a negative number, it should compute \'begin\' to be equal to \'begin\' + array.length.': function() {
+      var returnedArray = slice([1, 2, 3], -1);
+      eq(returnedArray[0], 3)
+      eq(returnedArray.length, 1);
+    },
+
+    'If \'end\' is a valid index in the original array, it should not extract the value at \'end\' index.': function() {
+      var originalArray = [1, 2];
+      var returnedArray = slice(originalArray, 0, 1);
+      eq(returnedArray[0], 1);
+      eq(returnedArray.length, 1);
+    },
+    'If \'end\' is undefined, \'end\' should be set to array.length.': function() {
+      var returnedArray = slice([1, 2], 0, undefined);
+      eq(returnedArray[0], 1);
+      eq(returnedArray[1], 2);
+    },
+    'If \'end\' is a positive number greater than array.length - 1, it should extract through to the end of the sequence (array.length).': function() {
+      var returnedArray = slice([1, 2, 3], 0, 4);
+      eq(returnedArray.length, 3);
+    },
+    'If \'end\' is a negative number, it should compute \'end\' to be equal to \'end\' + array.length.': function() {
+      var returnedArray = slice([1, 2, 3], 0, -2);
+      eq(returnedArray[0], 1)
+      eq(returnedArray.length, 1);
+    },
+
+    'It should copy any object references (and not the actual objects) from the original array into the new array.': function() {
+      var originalArray = [{ prop: 1 }]
+      var returnedArray = slice(originalArray);
+      eq(returnedArray[0].prop, 1);
+      originalArray[0].prop = 2;
+      eq(returnedArray[0].prop, 2);
+    },
+    'It should copy any primitive values from the original array into the new array.': function() {
+      var returnedArray = slice([0, 'string', true, null, undefined]);
+      eq(returnedArray[0], 0);
+      eq(returnedArray[1], 'string');
+      eq(returnedArray[2], true);
+      eq(returnedArray[3], null);
+      eq(returnedArray[4], undefined);
+    },
+    'If a new element is added to either the original array or the new array, the other array should not be affected.': function() {
+      var originalArray = [1, 2, 3];
+      var returnedArray = slice(originalArray);
+      originalArray.push(true);
+      returnedArray.push(false);
+      eq(returnedArray.includes(true), false);
+      eq(originalArray.includes(false), false);
+
+    },
+    'All holes from \'begin\' to \'end\' indexes should be preserved in the new array.': function() {
+      var returnedArray = slice([, , 1, ,], 2);
+      eq(Object.keys(returnedArray).length, 1);
+      eq(returnedArray.length, 2);
+    },
+    'It should not mutate the original array.': function() {
+      var originalArray = [1, 2, 3];
+      slice(originalArray);
+      eq(JSON.stringify(originalArray), JSON.stringify([1, 2, 3]));
+    },
+    'It should extract elements from array-like objects.': function() {
+      var arrayLikeObject = {
+        0: 1,
+        1: 2,
+        2: 3,
+        length: 3
+      };
+
+      var returnedArray = slice(arrayLikeObject, 1);
+      eq(returnedArray.length, arrayLikeObject.length - 1);
+    }
+  });
+</script>

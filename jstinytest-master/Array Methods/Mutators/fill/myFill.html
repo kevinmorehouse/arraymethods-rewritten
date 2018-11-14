@@ -1,0 +1,264 @@
+<script src="../../../simpletest.js"></script>
+<script>
+
+  /*
+  Requirements:
+
+  Function Signature:
+    fill(array, value[, start[, end]])
+
+  Parameters:
+    array
+    value
+    start (optional)
+    end (optional)
+
+  Return Value:
+    The modified array.
+  */
+
+  function fill(array, value, start, end) {
+
+    if (array instanceof Object === false) {
+      array = Object.prototype.valueOf.call(array);
+    }
+
+    if (array instanceof String && array.valueOf() !== "") {
+      throw new TypeError();
+    }
+
+    if (start < 0) {
+      start += array.length;
+    }
+
+    if (arguments.length < 3 || start === undefined || start < 0) {
+      start = 0;
+    }
+
+    if (arguments.length < 4 || end === undefined || end > array.length ) {
+      end = array.length;
+    }
+
+    if (end < 0) {
+      end += array.length;
+    }
+
+    for (var i = start; i < end; i++) {
+      array[i] = value;
+    }
+    return array;
+  }
+
+  tests({
+    'It should return an object.': function() {
+      var returnedValue = fill([1, 2, 3]);
+      eq(typeof returnedValue, 'object');
+      eq(typeof returnedValue !== null, true);
+    },
+    'It should return the original (potentially modified) object, not a copy.': function() {
+      var testArray = [1, 2, 3];
+      var returnedValue = fill(testArray);
+      eq(returnedValue, testArray);
+    },
+
+    'It should fill the optional \'start\' index with provided value.': function() {
+      var testArray = [1, 2, 3];
+      fill(testArray, 'filled', 0, 2);
+      eq(testArray[0], 'filled');
+    },
+    'It should not fill the optional \'end\' index with provided value.': function() {
+      var testArray = [1, 2, 3]
+      fill(testArray, 'filled', 0, 2);
+      eq(testArray[2] !== 'filled', true);
+    },
+    'It should fill all consecutive numerical indexes between \'start\' and \'end\' with provided value.': function() {
+      var testArray = [1, 2, 3];
+      fill(testArray, 'filled', 0, 2);
+      eq(testArray[1], 'filled');
+    },
+
+    'If \'start\' index  is undefined (or not provided), the value of \'start\' should default to 0.': function() {
+      var testArray = [1, 2, 3];
+      fill(testArray, 'filled');
+      eq(testArray[0], 'filled');
+    },
+    'If \'start\' value is a negative number, it should compute \'start\' to be equal to length + \'start\'.': function() {
+      var testArray = [1, 2, 3];
+      fill(testArray, 'filled', -2, 2);
+      eq(testArray[1], 'filled');
+    },
+
+    'If \'end\' index is undefined, (or not provided), the value of \'end\' should default to this.length.': function() {
+      var testArray = [1, 2, 3];
+      fill(testArray, 'filled', 0);
+      eq(testArray[2], 'filled');
+    },
+    'If \'end\' value is a negative number, it should compute \'end\' to be equal to length + \'end\'.': function() {
+      var testArray = [1, 2, 3];
+      fill(testArray, 'filled', 0, -1);
+      eq(testArray[1], 'filled');
+    },
+
+    'If any index between original (or computed) values of \'start\' and \'end\' is a hole, the missing index will be created and filled in with provided value.': function() {
+      var testArray = [1, , 3];
+      fill(testArray, 'filled');
+      eq(1 in testArray, true);
+      eq(testArray[1], 'filled');
+    },
+    'Holes existing outside original (or computed) values of \'start\' and \'end\' should be unchanged.': function() {
+      var testArray = [1, 2, ,];
+      fill(testArray, 'filled', 0, 2);
+      eq(2 in testArray, false);
+    },
+
+    'If \'fill\' is called with only one argument, provided value should default to \'undefined\'.': function() {
+      var testArray = [1, 2, 3];
+      fill(testArray);
+      eq(testArray[0], undefined);
+      eq(testArray[1], undefined);
+      eq(testArray[2], undefined);
+    },
+
+    'If original (or computed) index of \'start\' is greater than the \'end\' index, it should return the object unchanged.': function() {
+      var testArray = [1, 2, 3];
+      fill(testArray, 'filled', 2, 0);
+      eq(JSON.stringify(testArray), JSON.stringify([1, 2, 3]));
+    },
+    'If original index of \'start\' is greater than or equal to length, it should return the object unchanged.': function() {
+      var testArray = [1, 2, 3];
+      fill(testArray, 'filled', 3);
+      eq(JSON.stringify(testArray), JSON.stringify([1, 2, 3]));
+    },
+    'If computed index of \'start\' is less than 0, the value of \'start\' should default to 0.': function() {
+      var testObject = {
+        0: 1,
+        1: 2,
+        2: 3,
+        length: 3
+      }
+      fill(testObject, 'filled', -4);
+      eq(-1 in testObject, false);
+    },
+
+    'If original (or computed) index of \'end\' is less than the \'start\' index, it should return the object unchanged.': function() {
+      var testArray = [1, 2, 3];
+      fill(testArray, 'filled', 1, 0);
+      eq(JSON.stringify(testArray), JSON.stringify([1, 2, 3]));
+    },
+    'If original index of \'end\' is greater than the value of length, the value of \'end\' should default to this.length': function() {
+      var testArray = [1, 2, 3];
+      fill(testArray, 'filled', 2, 5);
+      eq(testArray[2], 'filled');
+      eq(testArray.length, 3);
+    },
+    'If computed index of \'end\' is less than 0, it should return the object unchanged.': function() {
+      var testArray = [1, 2, 3];
+      fill(testArray, 'filled', 0, -4);
+      eq(JSON.stringify(testArray), JSON.stringify([1, 2, 3]));
+    },
+
+    'If provided value is an object, it should fill the object \'fill\' was called on with references to the provided object, not the provided object itself.': function() {
+      var testArray = [1, 2, 3];
+      var objectElement = { changed: false };
+      fill(testArray, objectElement);
+      eq(testArray[0].changed, false);
+      objectElement.changed = true;
+      eq(testArray[0].changed, true);
+    },
+    'If provided value is a primitive value, it should fill the object \'fill\' was called on with unchanged copies of that primitive value.': function() {
+      var testArray = [1, 2, 3];
+      fill(testArray, "I'm a string");
+      eq(testArray[0], "I'm a string");
+      eq(testArray[2], "I'm a string");
+    },
+
+    'It should accept non-array objects.': function() {
+      var testObject = {
+        0: 1,
+        1: 2,
+        2: 3,
+        length: 3 
+      }
+      fill(testObject, 'filled');
+      eq(testObject[0], 'filled');
+      eq(testObject[1], 'filled');
+      eq(testObject[2], 'filled');
+    },
+    'It should not modify the length property of objects.': function() {
+      var testObject = {
+        0: 1,
+        1: 2,
+        2: 3,
+        length: -5 
+      }
+      fill(testObject);
+      eq(testObject.length, -5);
+    },
+    'If \'fill\' is called on an object without a length property, it should return that object unchanged.': function() {
+      var testObject = {
+        0: 1,
+        1: 2,
+        2: 3
+      }
+      fill(testObject);
+      eq('length' in testObject, false);
+    },
+
+    'If called on a number primitive, it should return that value converted to a Number object.': function() {
+      var returnedValue = fill(1);
+      eq(returnedValue instanceof Number, true);
+      eq(returnedValue.valueOf(), 1);
+    },
+    'If called on a boolean primitive, it should return that value converted to a Boolean object.': function() {
+      var returnedValue = fill(true);
+      eq(returnedValue instanceof Boolean, true);
+      eq(returnedValue.valueOf(), true);
+    },
+
+    'If called on a Number object, it should return that object unchanged.': function() {
+      var returnedValue = fill(new Number);
+      eq(returnedValue instanceof Number, true);
+      eq(returnedValue.valueOf(), 0);
+    },
+    'If called on a Boolean object, it should return that object unchanged.': function() {
+      var returnedValue = fill(new Boolean);
+      eq(returnedValue instanceof Boolean, true);
+      eq(returnedValue.valueOf(), false);
+    },
+    'If called on a String object, it should return that object unchanged.': function() {
+      var returnedValue = fill(new String);
+      eq(returnedValue instanceof String, true);
+      eq(returnedValue.valueOf(), "");
+    },
+    'If called on a Function object, it should return that object unchanged.': function() {
+      function foo() {}
+      var returnedValue = fill(foo);
+      eq(returnedValue instanceof Function, true);
+    },
+
+    'If called on a string, it should throw a TypeError.': function() {
+      try {
+        fill('string');
+      } catch (e) {
+        var isTypeError = e instanceof TypeError;
+      }
+      eq(isTypeError, true);
+    },
+    'If called on \'null\', it should throw a TypeError.': function() {
+      try {
+        fill(null);
+      } catch (e) {
+        var isTypeError = e instanceof TypeError;
+      }
+      eq(isTypeError, true);
+    },
+    'If called on \'undefined\' it should throw a TypeError.': function() {
+      try {
+        fill(undefined);
+      } catch (e) {
+        var isTypeError = e instanceof TypeError;
+      }
+      eq(isTypeError, true);
+    }
+  });
+</script>

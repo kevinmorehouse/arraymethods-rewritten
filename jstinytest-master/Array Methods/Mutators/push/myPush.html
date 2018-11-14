@@ -1,0 +1,231 @@
+<script src="../../../simpletest.js"></script>
+<script>
+
+  /*
+  Function Signature:
+    push(array, element1[, ...[, elementN]])
+
+  Parameters:
+    array
+    elementN
+
+  Return Value:
+    The new length property of the object upon which the method was called.
+  */
+
+  function push(array) {
+
+    array = Object.prototype.valueOf.call(array);
+
+    if (typeof array === 'function' || typeof array === 'string' || array instanceof String) {
+      throw new TypeError();
+    }
+
+    if (typeof array.length !== 'number') {
+      array.length = +array.length;
+    }
+
+    if (Number.isNaN(array.length) || array.length < 0) {
+      array.length = 0;
+    }
+
+    if (Number.isInteger(array.length) === false) {
+      array.length = Math.floor(array.length);
+    }
+
+    if (arguments.length > 1) {
+      var length = array.length;
+
+      for (var i = 0; i + 1 < arguments.length; i++) {
+        array[length + i] = arguments[i + 1];
+
+        if (array instanceof Array === false) {
+          array.length++;
+        }
+      }
+    }
+    return array.length;
+  }
+
+  tests({
+    'It should return a whole number.': function () {
+      var returnedValue = push([1], 0);
+      eq(Number.isInteger(returnedValue), true);
+    },
+    'If elements provided, it should return a whole number equal to the length property of the original array or object, plus the number of provided elements.': function () {
+      var testArray = [];
+      var returnedValue = push(testArray, 0);
+      eq(testArray.length, 1);
+    },
+    'If no elements provided, it should return a number equal to the length property of the original array or object.': function () {
+      var testArray = [];
+      var returnedValue = push(testArray);
+      eq(testArray.length, 0);
+    },
+
+    'If elements provided, elements should be added to the original array starting from the index that is equal to the original length property.': function () {
+      var testArray = [0];
+      var originalTestArrayLength = testArray.length;
+      push(testArray, 1);
+      eq(testArray[originalTestArrayLength], 1);
+    },
+    'If elements provided, elements should be added to the original array or object in the order in which they were provided.': function () {
+      var testArray = [0];
+      push(testArray, 1, 2);
+      eq(testArray[1], 1);
+      eq(testArray[2], 2);
+    },
+    'If elements provided are primitive values, elements should be appended unchanged to the original array or object.': function () {
+      var testArray = [0];
+      push(testArray, 1, 'two', false);
+      eq(testArray[0], 0);
+      eq(testArray[1], 1);
+      eq(testArray[2], 'two');
+      eq(testArray[3], false);
+    },
+    'If elements provided are objects, it should append object references (and not the objects themselves) to the original array or object.': function () {
+      var testArray = [];
+      var testObject = { changed: false };
+      push(testArray, testObject);
+      eq(testArray[0].changed, false);
+      testObject.changed = true;
+      eq(testArray[0].changed, true);
+    },
+
+    'If elements provided, it should modify the original array or object.': function () {
+      var originalArray = [];
+      var originalArrayString = JSON.stringify(originalArray);
+      push(originalArray, 0);
+      var modifiedArrayString = JSON.stringify(originalArray);
+      eq(originalArrayString !== modifiedArrayString, true);
+    },
+    'It should push to non-array objects.': function () {
+      var testObject = {
+        0: 0,
+        length: 1
+      }
+      push(testObject, 1);
+      eq(testObject[1], 1);
+    },
+
+    'If the length property of the original array or object is undefined, the length property should be created and set to 0.': function () {
+      var testObject = {
+        0: 0
+      }
+      eq(testObject.length, undefined);
+      push(testObject);
+      eq(testObject.length, 0);
+    },
+    'If the length property of the original array or object is not of numeric data type, the length property should be coerced to a number via unary +.': function () {
+      var testObject = {
+        0: 0,
+        length: true
+      }
+      eq(typeof testObject.length, 'boolean');
+      push(testObject);
+      eq(typeof testObject.length, 'number');
+      eq(testObject.length, 1);
+    },
+    'If the length property of the original array or object is NaN, or otherwise cannot be coerced to a number via unary +, the length property should be set to 0.': function () {
+      var testObject = {
+        0: 0,
+        length: "I can't be coerced to a number"
+      }
+      eq(Number.isNaN(+testObject.length), true);
+      push(testObject);
+      eq(testObject.length, 0);
+    },
+    'If the length property of the original array or object is a number less than 0 (or is coerced to such), the length property should be set to 0.': function () {
+      var testObject = {
+        0: 0,
+        length: -1
+      }
+      push(testObject);
+      eq(testObject.length, 0);
+    },
+    'If the length property of the original array or object is a number greater than 0, but not an integer (or is coerced to such), the length property should be rounded down to the nearest integer.': function () {
+      var testObject = {
+        0: 0,
+        length: 1.999
+      }
+      push(testObject);
+      eq(testObject.length, 1);
+    },
+
+    'If elements provided, and new length property is created, the final value of length should be equal to the number of provided elements.': function () {
+      var testObject = {
+        0: 0,
+        1: 1
+      }
+      eq(testObject.length, undefined);
+      push(testObject, 1, 2, 3);
+      eq(testObject.length, 3);
+    },
+    'If elements provided, and original object has values at index[length] or greater, provided elements will overwrite old values as necessary.': function () {
+      var testObject = {
+        a: "I can't be overwritten by 'push'",
+        1: 1,
+        2: 2,
+        length: 1
+      }
+      push(testObject, 'I overwrite the value at testObject[length]', 'I overwrite the value at testObject[length + 1]', "I don't overwrite anything");
+      eq(testObject['a'], "I can't be overwritten by 'push'");
+      eq(testObject[1], 'I overwrite the value at testObject[length]');
+      eq(testObject[2], 'I overwrite the value at testObject[length + 1]');
+      eq(testObject[3], "I don't overwrite anything");
+    },
+
+    'If called on a function object, it should throw a TypeError.': function () {
+      function foo() {
+        console.log("Don't push me");
+      }
+
+      try {
+        push(foo);
+      } catch (e) {
+        var isTypeError = e instanceof TypeError;
+      }
+      eq(isTypeError, true);
+    },
+    'If called on a primitive string, it should throw a TypeError.': function () {
+      try {
+        push('string');
+      } catch (e) {
+        var isTypeError = e instanceof TypeError;
+      }
+      eq(isTypeError, true);
+    },
+    'If called on a String object, it should throw a TypeError.': function () {
+      try {
+        push(new String);
+      } catch (e) {
+        var isTypeError = e instanceof TypeError;
+      }
+      eq(isTypeError, true);
+    },
+    'If called on null value, it should throw a TypeError.': function () {
+      try {
+        push(null);
+      } catch (e) {
+        var isTypeError = e instanceof TypeError;
+      }
+      eq(isTypeError, true);
+    },
+    'If called on undefined value, it should throw a TypeError.': function () {
+      try {
+        push(undefined);
+      } catch (e) {
+        var isTypeError = e instanceof TypeError;
+      }
+      eq(isTypeError, true);
+    },
+    'If called on a number (or other value of numeric type), it should return 0.': function () {
+      var returnedValue = push(1);
+      eq(returnedValue, 0);
+    },
+    'If called on a boolean, it should return 0.': function () {
+      var returnedValue = push(true);
+      eq(returnedValue, 0);
+    }
+  });
+</script>

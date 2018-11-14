@@ -1,0 +1,93 @@
+<script src="../../../simpletest.js"></script>
+<script>
+
+  /*
+  Function Signature:
+    includes(array, searchElement[, fromIndex])
+
+  Parameters:
+    array
+    searchElement
+    fromIndex (optional)
+  Return Value:
+    A Boolean, representing whether an array includes the provided searchElement.
+  */
+
+  function includes(array, searchElement, optionalFromIndex) {
+    
+    if (arguments.length < 3) {
+      optionalFromIndex = 0;
+    }
+
+    if (optionalFromIndex < 0) {
+      optionalFromIndex = optionalFromIndex + array.length;
+    }
+
+    for (var i = optionalFromIndex; i < array.length; i++) {
+      if (array[i] === searchElement || Object.is(array[i], searchElement)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  tests({
+    'If searchElement is found in array, it should return \'true\'.': function() {
+      var returnedValue = includes([1], 1, 0);
+      eq(returnedValue, true);
+    },
+    'If searchElement is not found in array, it should return \'false\'.': function() {
+      var returnedValue = includes([1], 0, 0);
+      eq(returnedValue, false);
+    },
+
+    'It should search array indexes in ascending order.': function() {
+      var returnedValue = includes([1, 0, 0], 1, 1);
+      eq(returnedValue, false);
+    },
+
+    'If optional fromIndex (third argument to \'includes\') is not provided, its value should default to 0.': function() {
+      var returnedValue = includes([1, 2, 3], 1);
+      eq(returnedValue, true);
+    },
+    'If fromIndex is greater than or equal to array.length, it should return \'false\', without searching array.': function() {
+      var returnedValue = includes([0], 0, 1);
+      eq(returnedValue, false);
+    },
+    'If fromIndex is a negative number, it should be used as the offset from the end of the array, computing a new fromIndex.': function() {
+      var returnedValue = includes([0, 0, 1], 0, -1);
+      eq(returnedValue, false);
+    },
+    'If fromIndex is a negative number, and the newly computed fromIndex is less than 0, the whole array should be searched.': function() {
+      var returnedValue = includes([1, 2, 3, 4, 5], 4, -6);
+      eq(returnedValue, true);
+    },
+
+    'It should use strict equality to compare searchElement (second argument to \'includes\') to array elements.': function() {
+      var searchElement = 0;
+      var testArray = [0];
+      var returnedValue = includes(testArray, searchElement);
+      eq(returnedValue, true);
+      eq(testArray[0] === searchElement, true);
+    },
+    'If searchElement is NaN and any array element is NaN, return \'true\'.': function() {
+      var returnedValue = includes([NaN], NaN);
+      eq(returnedValue, true);
+    },
+    'It should not skip holes in the array.': function() {
+      var returnedValue = includes([,,,], undefined);
+      eq(returnedValue, true);
+    },
+    'It should search array-like objects.': function () {
+      var arrayLikeObject = {
+        0: 1,
+        1: 2,
+        length: 2
+      };
+
+      var returnedValue = includes(arrayLikeObject, 1);
+      eq(returnedValue, true);
+    }
+
+  });
+</script>

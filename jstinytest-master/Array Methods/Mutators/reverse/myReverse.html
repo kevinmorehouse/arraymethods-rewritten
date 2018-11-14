@@ -1,0 +1,182 @@
+<script src="../../../simpletest.js"></script>
+<script>
+
+  /*
+  Requirements:
+
+  Function Signature:
+    reverse(array)
+
+  Parameters:
+    array
+
+  Return Value:
+    The reversed array
+
+  */
+
+  function reverse(array) {
+    var lowIndexExists;
+    var highIndexExists;
+    var tempValue;
+
+    if (typeof array === 'string') {
+      throw new TypeError;
+    }
+
+    array = Object.valueOf.call(array);
+
+    for (var i = 0; i < array.length / 2; i++) {
+      lowIndexExists = i in array;
+      highIndexExists = (array.length - 1 - i) in array;
+
+      if (lowIndexExists || highIndexExists) {
+        tempValue = array[i];
+        array[i] = array[array.length - 1 - i];
+        array[array.length - 1 - i] = tempValue;
+      }
+
+      if (!highIndexExists) {
+        delete array[i];
+      }
+
+      if (!lowIndexExists) {
+        delete array[array.length - 1 - i];
+      }
+    }
+
+    return array;
+  }
+
+  tests({
+    'It should return an array.': function () {
+      var returnedValue = reverse([]);
+      eq(Array.isArray(returnedValue), true);
+    },
+    'It should return the array passed into the function, not a copy.': function () {
+      var testArray = [1, 2, 3];
+      var returnedValue = reverse(testArray);
+      eq(returnedValue, testArray);
+    },
+    'It should reverse values at consecutive numerical indexes less than array.length.': function () {
+      var testArray = [1, 2, 3];
+      reverse(testArray);
+      eq(testArray[0], 3);
+      eq(testArray[1], 2);
+      eq(testArray[2], 1);
+    },
+
+    'It should not ignore holes.': function () {
+      var testArray = [1, , 3];
+      reverse(testArray);
+      eq(testArray[0], 3);
+      eq(testArray[2], 1);
+      eq(1 in testArray, false);
+    },
+    'It should accept non-array objects.': function () {
+      var testObject = {
+        0: 1,
+        1: 2,
+        2: 3,
+        length: 3
+      }
+      reverse(testObject);
+      eq(testObject[0], 3);
+      eq(testObject[1], 2);
+      eq(testObject[2], 1);
+    },
+
+    'It should not reverse objects lacking a length property.': function () {
+      var testObject = {
+        0: 1,
+        1: 2,
+        2: 3
+      }
+      reverse(testObject);
+      eq(testObject[0], 1);
+      eq(testObject[1], 2);
+      eq(testObject[2], 3);
+    },
+    'It should not reverse objects with a non-numeric length value.': function () {
+      var testObject = {
+        0: 1,
+        1: 2,
+        2: 3,
+        length: "I'm not a number"
+      }
+      reverse(testObject);
+      eq(testObject[0], 1);
+      eq(testObject[1], 2);
+      eq(testObject[2], 3);
+    },
+    'It should not reverse objects with a non-positive length value.': function () {
+      var testObject = {
+        0: 1,
+        1: 2,
+        2: 3,
+        length: -3
+      }
+      reverse(testObject);
+      eq(testObject[0], 1);
+      eq(testObject[1], 2);
+      eq(testObject[2], 3);
+    },
+
+    'If called on a number primitive, it should return that value converted to a Number object.': function () {
+      var returnedValue = reverse(1);
+      eq(returnedValue instanceof Number, true);
+      eq(returnedValue.valueOf(), 1);
+    },
+    'If called on a boolean primitive, it should return that value converted to a Boolean object.': function () {
+      var returnedValue = reverse(true);
+      eq(returnedValue instanceof Boolean, true);
+      eq(returnedValue.valueOf(), true);
+    },
+    'If called on a Number object, it should return that object unchanged.': function () {
+      var returnedValue = reverse(new Number);
+      eq(returnedValue instanceof Number, true);
+      eq(returnedValue.valueOf(), 0);
+    },
+    'If called on a Boolean object, it should return that object unchanged.': function () {
+      var returnedValue = reverse(new Boolean);
+      eq(returnedValue instanceof Boolean, true);
+      eq(returnedValue.valueOf(), false);
+    },
+    'If called on a String object, it should return that object unchanged.': function () {
+      var returnedValue = reverse(new String);
+      eq(returnedValue instanceof String, true);
+      eq(returnedValue.valueOf(), "");
+    },
+    'If called on a Function object, it should return that object unchanged.': function () {
+      var foo = function () { }
+      var returnedValue = reverse(foo);
+      eq(returnedValue instanceof Function, true);
+      eq(returnedValue.valueOf(), foo);
+    },
+
+    'If called on a string, it should throw a TypeError.': function () {
+      try {
+        reverse('string');
+      } catch (e) {
+        var isTypeError = e instanceof TypeError;
+      }
+      eq(isTypeError, true);
+    },
+    'If called on \'null\', it should throw a TypeError.': function () {
+      try {
+        reverse(null);
+      } catch (e) {
+        var isTypeError = e instanceof TypeError;
+      }
+      eq(isTypeError, true);
+    },
+    'If called on \'undefined\' it should throw a TypeError.': function () {
+      try {
+        reverse(undefined);
+      } catch (e) {
+        var isTypeError = e instanceof TypeError;
+      }
+      eq(isTypeError, true);
+    }
+  });
+</script>

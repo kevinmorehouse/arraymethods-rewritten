@@ -1,0 +1,236 @@
+<script src="../../../simpletest.js"></script>
+<script>
+
+  /*
+  Requirements:
+
+  Function Signature:
+    unshift(array[, elementN])
+
+  Parameters:
+    array
+    elementN (optional)
+
+  Return Value:
+    The new length property of the object upon which the function was called.
+  */
+
+  function unshift(array) {
+    var numberOfElements = arguments.length - 1;
+    var oldLength;
+
+    array = Object.prototype.valueOf.call(array);
+
+    if (typeof array === 'string'|| array instanceof String || array instanceof Function) {
+      throw new TypeError();
+    }
+
+    if (typeof array.length !== 'number') {
+      array.length = +array.length;
+    }
+
+    if (Number.isNaN(array.length) || array.length < 0) {
+      array.length = 0;
+    }
+
+    if (Number.isInteger(array.length) === false) {
+      array.length = Math.floor(array.length);
+    }
+
+    if (arguments.length > 1) {
+      oldLength = array.length;
+      array.length += numberOfElements;
+
+      for (var i = oldLength - 1; i > -1; i--) {
+        if (i in array) {
+          array[i + numberOfElements] = array[i];
+        }
+      }
+
+      for (var j = 0; j < numberOfElements; j++) {
+        array[j] = arguments[j + 1];
+      }
+    }
+
+    return array.length;
+  }
+
+  tests({
+    'It should return a number.': function () {
+      var returnedValue = unshift([]);
+      eq(typeof returnedValue, 'number');
+    },
+    'It should return a number equal to the original (or coerced) value of length, plus the number of provided elements.': function () {
+      var returnedValue = unshift([], 1);
+      eq(returnedValue, 1);
+    },
+    'If elements provided, it should add elements starting from index 0.': function () {
+      var testArray = [];
+      unshift(testArray, 1);
+      eq(testArray[0], 1);
+    },
+    'If elements provided, they should be added in order they appear in argument list.': function () {
+      var testArray = [];
+      unshift(testArray, 1, 2, 3);
+      eq(testArray[0], 1);
+      eq(testArray[1], 2);
+      eq(testArray[2], 3);
+    },
+
+    'If elements provided, it should increase the value of the length property by the number of provided elements.': function () {
+      var testArray = [];
+      var originalTestArrayLength = testArray.length;
+      unshift(testArray, 1, 2, 3);
+      eq(testArray.length, originalTestArrayLength + 3);
+    },
+    'If elements provided, pre-existing values at consecutive numerical indexes less than the original length value should be shifted to indexes equal to their current index, plus the number of provided elements.': function () {
+      var testArray = [1, 2, 3];
+      unshift(testArray, 'one', 'two', 'three');
+      eq(testArray[0 + 3], 1);
+      eq(testArray[1 + 3], 2);
+      eq(testArray[2 + 3], 3);
+    },
+    'It should run on non-array objects.': function () {
+      var testObject = {
+        0: 'a',
+        1: 'b',
+        length: 2
+      }
+      var returnedValue = unshift(testObject, 1);
+      eq(returnedValue, 3);
+      eq(testObject[0], 1);
+      eq(testObject[1], 'a');
+      eq(testObject[2], 'b');
+    },
+
+    'If element provided is an object, it should add an object reference (and not the object itself).': function () {
+      var objectElement = { changed: false };
+      var testArray = [];
+      unshift(testArray, objectElement);
+      eq(testArray[0].changed, false);
+      objectElement.changed = true;
+      eq(testArray[0].changed, true);
+    },
+    'If element provided is a primitive value, it should add that value unaltered.': function () {
+      var testArray = [];
+      var stringElement = "I shouldn't change"
+      unshift(testArray, stringElement);
+      eq(stringElement, "I shouldn't change");
+    },
+
+    'If the length property does not exist, it should add the length property and set it to 0 before adding any elements.': function () {
+      var testObject = {
+        0: 'a',
+        1: 'b'
+      }
+      unshift(testObject);
+      eq(testObject.length, 0);
+    },
+    'If the length value is not of numeric type, it will be coerced to numeric type via unary + before adding any elements.': function () {
+      var testObject = {
+        0: 'a',
+        1: 'b',
+        length: true
+      }
+      unshift(testObject);
+      eq(testObject.length, 1);
+    },
+    'If the length value is NaN, or otherwise cannot be coerced to a number via unary +, the length property should be set to 0 before adding any elements.': function () {
+      var testObject = {
+        0: 'a',
+        1: 'b',
+        length: 'I cannot be coerced'
+      }
+      unshift(testObject);
+      eq(testObject.length, 0);
+    },
+    'If the length value is (or is coerced to) a number less than 0, the length property should be set to 0 before adding any elements.': function () {
+      var testObject = {
+        0: 'a',
+        1: 'b',
+        length: -1
+      }
+      unshift(testObject);
+      eq(testObject.length, 0);
+    },
+    'If the length value is (or is coerced to) a number greater than 0, but not an integer, the length value should be rounded down to the nearest integer before adding any elements.': function () {
+      var testObject = {
+        0: 'a',
+        1: 'b',
+        length: 3.99
+      }
+      unshift(testObject);
+      eq(testObject.length, 3);
+    },
+
+    'It should preserve holes. ': function () {
+      var holyArray = [, , ,];
+      var returnedValue = unshift(holyArray, 1);
+      eq(0 in holyArray, true);
+      eq(1 in holyArray, false);
+      eq(2 in holyArray, false);
+      eq(3 in holyArray, false);
+      eq(returnedValue, 4);
+    },
+
+    'If called on a number primitive, it should return 0.': function () {
+      var returnedValue = unshift(1);
+      eq(returnedValue, 0);
+    },
+    'If called on a Number object, it should return 0.': function () {
+      var returnedValue = unshift(new Number);
+      eq(returnedValue, 0);
+    },
+    'If called on a boolean primitive, it should return 0.': function () {
+      var returnedValue = unshift(true);
+      eq(returnedValue, 0);
+    },
+    'If called on a Boolean object, it should return 0.': function () {
+      var returnedValue = unshift(new Boolean);
+      eq(returnedValue, 0);
+    },
+
+    'If called on a string primitive, it should throw a TypeError.': function () {
+      try {
+        unshift('string');
+      } catch (e) {
+        var isTypeError = e instanceof TypeError;
+      }
+      eq(isTypeError, true);
+    },
+    'If called on a String object, it should throw a TypeError.': function () {
+      try {
+        unshift(new String);
+      } catch (e) {
+        var isTypeError = e instanceof TypeError;
+      }
+      eq(isTypeError, true);
+    },
+    'If called on a function, it should throw a TypeError.': function () {
+      function foo() {}
+      
+      try {
+        unshift(foo);
+      } catch (e) {
+        var isTypeError = e instanceof TypeError;
+      }
+      eq(isTypeError, true);
+    },
+    'If called on \'null\', it should throw a TypeError.': function () {
+      try {
+        unshift(null);
+      } catch (e) {
+        var isTypeError = e instanceof TypeError;
+      }
+      eq(isTypeError, true);
+    },
+    'If called on \'undefined\', it should throw a TypeError.': function () {
+      try {
+        unshift(undefined);
+      } catch (e) {
+        var isTypeError = e instanceof TypeError;
+      }
+      eq(isTypeError, true);
+    }
+  });
+</script>

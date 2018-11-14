@@ -1,0 +1,193 @@
+<script src="../../../simpletest.js"></script>
+<script>
+
+  /*
+
+  Function signature:
+    reduceRight(array, callback[, initialValue])
+  
+  Parameters:
+    array
+    callback
+      accumulator
+      currentValue
+      index
+      array
+    initialValue
+  
+  Return Value:
+    The (single) value that results from the reduction.
+
+  Prototype Implementation:
+
+    function reduceRight(array, callback, initialValue) {
+      var accumulator = initialValue;
+      for (var i = array.length - 1; i > -1; i--) {
+        accumulator = callback(accumulator, array[i], i, array);
+      }
+      return accumulator;
+    }
+
+  */
+
+  function reduceRight(array, callback, optionalInitialValue) {
+    var accumulator = optionalInitialValue;
+    var startingIndex = array.length - 1;
+
+    if (arguments.length < 3) {
+
+      if (Object.keys(array).length === 0) {
+        throw new TypeError('Reduce of empty array with no initial value')
+      }
+
+      while (startingIndex in array === false && startingIndex > -1) {
+        startingIndex--;
+      }
+
+      accumulator = array[startingIndex];
+      startingIndex--;
+    }
+
+    for (var i = startingIndex; i > -1; i--) {
+      if (i in array) {
+        accumulator = callback(accumulator, array[i], i, array);
+      }
+
+    }
+    return accumulator;
+  }
+
+  tests({
+    'If initialValue, it should skip holes in array.': function () {
+      var numberOfTimesCallbackHasRun = 0;
+      var returnedValue = reduceRight([, 1, , 2, , 3, ,], function (accumulator, currentValue) {
+        numberOfTimesCallbackHasRun++;
+        return accumulator + currentValue;
+      }, 0);
+      eq(numberOfTimesCallbackHasRun, 3);
+      eq(returnedValue, 6);
+    },
+    'If no initialValue, it should skip holes, too.': function () {
+      var numberOfTimesCallbackHasRun = 0;
+      var returnedValue = reduceRight([, 1, , 2, , 3, ,], function (accumulator, currentValue) {
+        numberOfTimesCallbackHasRun++;
+        return accumulator + currentValue;
+      });
+      eq(numberOfTimesCallbackHasRun, 2);
+      eq(returnedValue, 6);
+    },
+
+    'If initialValue, it should run callback array.length times.': function () {
+      var numberOfTimesCallbackHasRun = 0;
+      reduceRight([1], function () {
+        numberOfTimesCallbackHasRun++;
+      }, 0);
+      eq(numberOfTimesCallbackHasRun, 1);
+    },
+    'If initialValue, accumulator should start with initialValue.': function () {
+      var initialValue = 0;
+      reduceRight([1], function (accumulator) {
+        eq(accumulator, initialValue);
+      }, initialValue);
+    },
+    'If initialValue, currentValue should start with the last value in array.': function () {
+      reduceRight([1], function (accumulator, currentValue) {
+        eq(currentValue, 1);
+      }, 0);
+    },
+    'If initialValue, currentIndex should start with the last index in the array.': function () {
+      reduceRight([1], function (accumulator, currentValue, currentIndex) {
+        eq(currentIndex, 0);
+      }, 0);
+    },
+
+    'If no initialValue, it should run callback array.length - 1 times.': function () {
+      var numberOfTimesCallbackHasRun = 0;
+      reduceRight([1, 2], function () {
+        numberOfTimesCallbackHasRun++;
+      });
+      eq(numberOfTimesCallbackHasRun, 1);
+    },
+    'If no initialValue, accumulator should start with the last value in array.': function () {
+      reduceRight([1, 2], function (accumulator) {
+        eq(accumulator, 2);
+      });
+    },
+    'If no initialValue, currentValue should start with the second-to-last value in array.': function () {
+      reduceRight([1, 2], function (accumulator, currentValue) {
+        eq(currentValue, 1);
+      });
+    },
+    'If no initialValue, currentIndex should start with the second-to-last index in the array.': function () {
+      reduceRight([1, 2], function (accumulator, currentValue, currentIndex) {
+        eq(currentIndex, 0);
+      });
+    },
+
+    'It should pass in the original array as the fourth argument to the callback.': function () {
+      var originalArray = [1, 2, 3]
+      reduceRight(originalArray, function (accumulator, currentValue, currentIndex, array) {
+        eq(array, originalArray);
+      }, 0);
+    },
+
+    'It should return the single value that results from the reduction.': function () {
+      var returnedValue = reduceRight([1, 2, 3], function (accumulator, currentValue, currentIndex) {
+        return accumulator + currentValue;
+      }, 0);
+      eq(returnedValue, 6);
+    },
+
+    'If no initialValue and array is empty, it should throw a TypeError.': function () {
+      try {
+        reduceRight([, ,], function () { });
+      } catch (e) {
+        var isTypeError = (e instanceof TypeError)
+      }
+      eq(isTypeError, true);
+    },
+
+    'If initialValue, and array is empty, it should return initialValue without calling callback.': function () {
+      var numberOfTimesCallbackHasRun = 0;
+      var returnedValue = reduceRight([], function () {
+        numberOfTimesCallbackHasRun++;
+      }, 0);
+      eq(returnedValue, 0);
+      eq(numberOfTimesCallbackHasRun, 0);
+    },
+    'If no initialValue, and array has only one element, it should return that element without calling callback.': function () {
+      var numberOfTimesCallbackHasRun = 0;
+      var returnedValue = reduceRight([1], function () {
+        numberOfTimesCallbackHasRun++;
+      });
+      eq(returnedValue, 1);
+      eq(numberOfTimesCallbackHasRun, 0);
+    },
+
+    'It should not mutate the array on which it is called.': function () {
+      var testArray = [1, 2, 3];
+      reduceRight(testArray, function () { });
+      eq(JSON.stringify(testArray), JSON.stringify([1, 2, 3]));
+    },
+    'It should not call callback on elements appended to array after call to `reduceRight` begins.': function () {
+      var numberOfTimesCallbackHasRun = 0;
+      var testArray = [1];
+      var returnedValue = reduceRight(testArray, function (accumulator, currentValue, currentIndex, array) {
+        numberOfTimesCallbackHasRun++;
+        array.push(2);
+        return accumulator + currentValue;
+      }, 0);
+      eq(numberOfTimesCallbackHasRun, 1);
+      eq(testArray.length, 2);
+    },
+    'If an existing, unvisited element of the array is changed by callback, its value passed to callback will be the value at the time `reduceRight` visits that element.': function () {
+      var testArray = [0, 0, 0];
+      var returnedValue = reduceRight(testArray, function (accumulator, currentValue, currentIndex, array) {
+        array.splice(0, 1, 5);
+        return accumulator + currentValue;
+      });
+      eq(returnedValue, 5);
+      eq(testArray[0], 5);
+    }
+  });
+</script>

@@ -1,0 +1,242 @@
+<script src="../../../simpletest.js"></script>
+<script>
+
+  /*
+  Function Signature:
+    pop(array)
+
+  Parameters:
+    array
+
+  Return Value:
+    The removed element from the array.
+    If array is empty, undefined.
+
+  */
+
+  function pop(array) {
+
+    array = Object.prototype.valueOf.call(array);
+
+    if (typeof array === 'string' || array instanceof String || array instanceof Function) {
+      throw new TypeError();
+    }
+
+    if (typeof array.length !== 'number') {
+      array.length = +array.length;
+    }
+
+    if (Number.isNaN(array.length) || array.length < 0) {
+      array.length = 0;
+    }
+
+    if (Number.isInteger(array.length) === false) {
+      array.length = Math.floor(array.length);
+    }
+
+    var poppedElement = array[array.length - 1];
+
+    delete array[array.length - 1];
+
+    if (array.length > 0) {
+      array.length--;
+    }
+
+    return poppedElement;
+  }
+
+  tests({
+    'It should delete the index of the original array or object at index equal to length - 1.': function () {
+      var testArray = [1];
+      pop(testArray);
+      eq(testArray[0], undefined);
+      eq(testArray.length, 0);
+    },
+    'It should return the element of the original array or object at index equal to length - 1.': function () {
+      var testArray = [1];
+      var returnedValue = pop(testArray);
+      eq(returnedValue, 1);
+    },
+    'If original or converted length value is greater than 1, it should decrease that length value by 1.': function () {
+      var testArray = [1];
+      var originalLength = testArray.length;
+      pop(testArray);
+      var newLength = testArray.length;
+      eq(newLength, originalLength - 1);
+    },
+
+    'It should accept non-array objects.': function () {
+      var testObject = {
+        0: 1,
+        1: 2,
+        length: 2
+      }
+      var returnedValue = pop(testObject);
+      eq(returnedValue, 2);
+      eq(testObject.length, 1);
+    },
+
+    'If called on array or object with a length value of 0, it should return \'undefined\'.': function () {
+      var returnedValue = pop([]);
+      eq(returnedValue, undefined);
+    },
+    'If called on an object with an undefined (or nonexistent) length value, it should return \'undefined\'.': function () {
+      var testObject = {
+        0: 1,
+        1: 2,
+      }
+      eq(!testObject.length, true);
+      var returnedValue = pop(testObject);
+      eq(returnedValue, undefined);
+    },
+
+    'If no index exists at index length - 1 of original array or object, it should not remove any existing indexes from original array or object.': function () {
+      var testObject = {
+        'a': "I can't be popped",
+        2: "Neither can I",
+        length: 2
+      }
+
+      pop(testObject);
+      eq(testObject['a'], "I can't be popped");
+      eq(testObject[2], "Neither can I");
+    },
+    'If no index exists at index length - 1 of original array or object, but length value is greater than 0, it should reduce length value by 1.': function () {
+      var testObject = {
+        'a': "I can't be popped",
+        2: "Neither can I",
+        length: 2
+      }
+
+      pop(testObject);
+      eq(testObject.length, 1);
+    },
+
+    'If index length - 1 of the original array or object contains an object, it should return an object reference (and not the object itself).': function () {
+      var objectElement = { changed: false };
+
+      var poppedValue = pop([objectElement]);
+      objectElement.changed = true;
+      eq(poppedValue.changed, true);
+    },
+    'If index length - 1 of the original array or object contains a primitive value, it should return that value unaltered.': function () {
+      var poppedValue = pop(['one', 'two', 'three']);
+      eq(poppedValue, 'three');
+    },
+
+    'It should not ignore holes.': function () {
+      var holyArray = [, , ,];
+      returnedValue = pop(holyArray);
+      eq(returnedValue, undefined);
+      eq(holyArray.length, 2);
+    },
+
+    'If the length value of the original object is not of numeric type, it will be coerced to numeric type via unary +.': function () {
+      var testObject = {
+        0: 1,
+        1: 2,
+        length: true
+      }
+      pop(testObject);
+      eq(typeof testObject.length, 'number');
+    },
+    'If the length property of the original object is NaN, or otherwise cannot be coerced to a number via unary +, the length property should be set to 0.': function () {
+      var testObject = {
+        0: 1,
+        1: 2,
+        length: 'I cannot be converted to a number'
+      }
+      pop(testObject);
+      eq(testObject.length, 0);
+    },
+    'If the length property of the original object is undefined, the length property should be created and set to 0.': function () {
+      var testObject = {
+        0: 1,
+        1: 2,
+      }
+      eq(testObject.length, undefined);
+      pop(testObject);
+      eq(testObject.length, 0);
+    },
+    'If the length property of the original object is a number less than 0 (or is coerced to such), the length property should be set to 0.': function () {
+      var testObject = {
+        0: 1,
+        1: 2,
+        length: -2
+      }
+      pop(testObject);
+      eq(testObject.length, 0);
+    },
+    'If the length property of the original object is a number greater than 0, but not an integer (or is coerced to such), the length value should be rounded down to the nearest integer before removing element at index length - 1.': function () {
+      var testObject = {
+        0: 1,
+        1: 2,
+        length: 2.99
+      }
+      pop(testObject);
+      eq(testObject.length, 1);
+    },
+
+    'If called on a number, it should return \'undefined\'.': function () {
+      var returnedValue = pop(1);
+      eq(returnedValue, undefined);
+    },
+    'If called on a Number object, it should return \'undefined\'.': function () {
+      var returnedValue = pop(new Number);
+      eq(returnedValue, undefined);
+    },
+    'If called on a boolean, it should return \'undefined\'.': function () {
+      var returnedValue = pop(true);
+      eq(returnedValue, undefined);
+    },
+    'If called on a Boolean object, it should return \'undefined\'.': function () {
+      var returnedValue = pop(new Boolean);
+      eq(returnedValue, undefined);
+    },
+    'If called on a string, it should throw a TypeError.': function () {
+      try {
+        pop('string');
+      } catch (e) {
+        var isTypeError = e instanceof TypeError;
+      }
+      eq(isTypeError, true);
+    },
+    'If called on a String object, it should throw a TypeError.': function () {
+      try {
+        pop(new String);
+      } catch (e) {
+        var isTypeError = e instanceof TypeError;
+      }
+      eq(isTypeError, true);
+    },
+
+    'If called on null, it should throw a TypeError.': function () {
+      try {
+        pop(null);
+      } catch (e) {
+        var isTypeError = e instanceof TypeError;
+      }
+      eq(isTypeError, true);
+    },
+    'If called on undefined, it should throw a TypeError.': function () {
+      try {
+        pop(undefined);
+      } catch (e) {
+        var isTypeError = e instanceof TypeError;
+      }
+      eq(isTypeError, true);
+    },
+    'If called on a function, it should throw a TypeError.': function () {
+      function foo() {
+        console.log('I cause a TypeError');
+      }
+
+      try {
+        pop(foo);
+      } catch (e) {
+        var isTypeError = e instanceof TypeError;
+      }
+      eq(isTypeError, true);
+    }
+  });
+</script>
